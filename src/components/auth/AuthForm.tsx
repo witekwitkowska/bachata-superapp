@@ -110,7 +110,7 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
             <Card className="border-0 shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
                 <CardHeader className="space-y-1 pb-4">
                     <motion.div variants={itemVariants}>
-                        <CardTitle className="--font-heading text-2xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                        <CardTitle className="--font-heading text-gray-900 dark:text-gray-400 text-2xl font-bold text-center">
                             {isLogin ? "Welcome back" : "Create account"}
                         </CardTitle>
                     </motion.div>
@@ -265,7 +265,7 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
                         <motion.div variants={itemVariants} className="pt-2">
                             <LoadingButton
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2.5 rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] dark:from-blue-400 dark:to-purple-400 dark:hover:from-blue-300 dark:hover:to-purple-300"
+                                className="w-full text-white font-medium py-2.5 rounded-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                                 loading={isLoading}
                                 loadingText={isLogin ? "Signing in..." : "Creating account..."}
                             >

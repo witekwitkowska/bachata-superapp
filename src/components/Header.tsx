@@ -2,6 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { User, LogIn, LogOut } from "lucide-react";
 
 import { Fade, Flex, Line, Row, ToggleButton } from "@once-ui-system/core";
 
@@ -41,6 +43,49 @@ const TimeDisplay: React.FC<TimeDisplayProps> = ({ timeZone, locale = "en-GB" })
 };
 
 export default TimeDisplay;
+
+const AuthControls = () => {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg">
+        <div className="w-4 h-4 border-2 border-neutral-800 dark:border-neutral-200 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (session?.user) {
+    return (
+      <div className="flex gap-4 items-center">
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+          title="Sign Out"
+        >
+          <LogOut className="w-4 h-4 text-neutral-800 dark:text-neutral-200" />
+        </button>
+        <a
+          href="/dashboard"
+          className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+          title="Go to Dashboard"
+        >
+          <User className="w-4 h-4 text-neutral-800 dark:text-neutral-200" />
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href="/auth/signin"
+      className="flex items-center justify-center w-10 h-10 bg-neutral-800 dark:bg-neutral-200 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-700 dark:hover:bg-neutral-300 transition-colors cursor-pointer"
+      title="Sign In"
+    >
+      <LogIn className="w-4 h-4 text-white dark:text-black" />
+    </a>
+  );
+};
 
 export const Header = () => {
   const pathname = usePathname() ?? "";
@@ -186,6 +231,7 @@ export const Header = () => {
             <Flex s={{ hide: true }}>
               {display.time && <TimeDisplay timeZone={person.location} />}
             </Flex>
+            <AuthControls />
           </Flex>
         </Flex>
       </Row>

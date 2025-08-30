@@ -13,7 +13,7 @@ import {
 import { home } from "./index";
 
 // IMPORTANT: Replace with your own domain address - it's used for SEO in meta tags and schema
-const baseURL: string = "https://demo.magic-portfolio.com";
+const baseURL: string = "https://bachata-app.com";
 
 const routes: RoutesConfig = {
   "/": true,
@@ -23,6 +23,11 @@ const routes: RoutesConfig = {
   "/gallery": true,
   "/auth/signin": true,
   "/auth/register": true,
+  "/dashboard": true,
+  "/dashboard/profile": true,
+  "/dashboard/bachata-level": true,
+  "/dashboard/teacher": true,
+  "/dashboard/settings": true,
 };
 
 const display: DisplayConfig = {
