@@ -21,6 +21,8 @@ const routes: RoutesConfig = {
   "/work": true,
   "/blog": true,
   "/gallery": true,
+  "/auth/signin": true,
+  "/auth/register": true,
 };
 
 const display: DisplayConfig = {
@@ -36,30 +38,29 @@ const protectedRoutes: ProtectedRoutesConfig = {
 };
 
 // Import and set font for each variant
-import { Geist } from "next/font/google";
-import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 
-const heading = Geist({
+const heading = localFont({
+  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
   variable: "--font-heading",
-  subsets: ["latin"],
   display: "swap",
 });
 
-const body = Geist({
+const body = localFont({
+  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
   variable: "--font-body",
-  subsets: ["latin"],
   display: "swap",
 });
 
-const label = Geist({
+const label = localFont({
+  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
   variable: "--font-label",
-  subsets: ["latin"],
   display: "swap",
 });
 
-const code = Geist_Mono({
+const code = localFont({
+  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
   variable: "--font-code",
-  subsets: ["latin"],
   display: "swap",
 });
 

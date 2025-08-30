@@ -1,6 +1,7 @@
 import "@once-ui-system/core/css/styles.css";
 import "@once-ui-system/core/css/tokens.css";
 import "@/resources/custom.css";
+import "@/resources/tailwind.css";
 
 import classNames from "classnames";
 
@@ -56,17 +57,17 @@ export default async function RootLayout({
                   
                   // Set defaults from config
                   const config = ${JSON.stringify({
-                    brand: style.brand,
-                    accent: style.accent,
-                    neutral: style.neutral,
-                    solid: style.solid,
-                    "solid-style": style.solidStyle,
-                    border: style.border,
-                    surface: style.surface,
-                    transition: style.transition,
-                    scaling: style.scaling,
-                    "viz-style": dataStyle.variant,
-                  })};
+              brand: style.brand,
+              accent: style.accent,
+              neutral: style.neutral,
+              solid: style.solid,
+              "solid-style": style.solidStyle,
+              border: style.border,
+              surface: style.surface,
+              transition: style.transition,
+              scaling: style.scaling,
+              "viz-style": dataStyle.variant,
+            })};
                   
                   // Apply default values
                   Object.entries(config).forEach(([key, value]) => {
