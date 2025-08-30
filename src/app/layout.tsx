@@ -87,6 +87,13 @@ export default async function RootLayout({
                   const resolvedTheme = resolveTheme(savedTheme);
                   root.setAttribute('data-theme', resolvedTheme);
                   
+                  // Also sync with Tailwind CSS dark mode
+                  if (resolvedTheme === 'dark') {
+                    root.classList.add('dark');
+                  } else {
+                    root.classList.remove('dark');
+                  }
+                  
                   // Apply any saved style overrides
                   const styleKeys = Object.keys(config);
                   styleKeys.forEach(key => {
@@ -95,6 +102,22 @@ export default async function RootLayout({
                       root.setAttribute('data-' + key, value);
                     }
                   });
+                  
+                  // Listen for theme changes and sync Tailwind CSS
+                  const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                      if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                        const newTheme = root.getAttribute('data-theme');
+                        if (newTheme === 'dark') {
+                          root.classList.add('dark');
+                        } else {
+                          root.classList.remove('dark');
+                        }
+                      }
+                    });
+                  });
+                  
+                  observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
                 } catch (e) {
                   console.error('Failed to initialize theme:', e);
                   document.documentElement.setAttribute('data-theme', 'dark');

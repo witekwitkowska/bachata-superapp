@@ -1,0 +1,247 @@
+import { auth } from "@/auth";
+import { NextRequest } from "next/server";
+import { ObjectId } from "mongodb";
+
+export interface CrudConfig<T = any> {
+  entity: string;
+  schema?: any;
+  auth?: boolean;
+  roles?: string[];
+  projection?: Record<string, 0 | 1>;
+  sort?: Record<string, 1 | -1>;
+  customFilters?: (session: any) => Record<string, any>;
+  beforeCreate?: (data: T, session: any) => Promise<T> | T;
+  beforeUpdate?: (
+    data: Partial<T>,
+    session: any,
+    id: string
+  ) => Promise<Partial<T>> | Partial<T>;
+  beforeDelete?: (session: any, id: string) => Promise<boolean>;
+  afterCreate?: (data: T, session: any) => Promise<void> | void;
+  afterUpdate?: (
+    data: Partial<T>,
+    session: any,
+    id: string
+  ) => Promise<void> | void;
+  afterDelete?: (id: string, session: any) => Promise<void> | void;
+}
+
+export async function checkAuth(config: CrudConfig, request?: NextRequest) {
+  console.log("checkAuth1");
+  if (!config.auth) return null;
+
+  console.log("auth2");
+  const session = await auth();
+  console.log("session3", session);
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+  console.log("session4", session);
+
+  if (config.roles && !config.roles.includes(session.user.role)) {
+    throw new Error("Insufficient permissions");
+  }
+  console.log("session5", session);
+
+  return session;
+}
+
+export async function getCollection(entity: string) {
+  const { connectToDatabase } = await import("@/lib/mongodb");
+  const { db } = await connectToDatabase();
+  return db.collection(entity);
+}
+
+export function transform<T>(data: T, config: CrudConfig): T {
+  if (config.projection) {
+    const transformed: any = {};
+    Object.keys(data as any).forEach((key) => {
+      if (config.projection![key] !== 0) {
+        transformed[key] = (data as any)[key];
+      }
+    });
+    return transformed;
+  }
+  return data;
+}
+
+export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
+  const GET = async (request: NextRequest) => {
+    try {
+      const session = await checkAuth(config, request);
+      const collection = await getCollection(config.entity);
+
+      const filters = config.customFilters ? config.customFilters(session) : {};
+      const sort = config.sort || { createdAt: -1 as const };
+
+      const documents = await collection.find(filters).sort(sort).toArray();
+
+      return Response.json({
+        success: true,
+        data: documents.map((doc) => transform(doc, config)),
+      });
+    } catch (error) {
+      return Response.json(
+        { success: false, error: (error as Error).message },
+        { status: 400 }
+      );
+    }
+  };
+
+  const GET_BY_ID = async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
+    try {
+      const session = await checkAuth(config, request);
+      const collection = await getCollection(config.entity);
+
+      const { id } = await params;
+
+      const document = await collection.findOne({
+        _id: new ObjectId(id),
+      });
+      if (!document) {
+        return Response.json(
+          { success: false, error: "Document not found" },
+          { status: 404 }
+        );
+      }
+
+      return Response.json({
+        success: true,
+        data: transform(document, config),
+      });
+    } catch (error) {
+      return Response.json(
+        { success: false, error: (error as Error).message },
+        { status: 400 }
+      );
+    }
+  };
+
+  const POST = async (request: NextRequest) => {
+    try {
+      const session = await checkAuth(config, request);
+      const collection = await getCollection(config.entity);
+
+      const body = await request.json();
+      let data = body;
+
+      if (config.beforeCreate) {
+        data = await config.beforeCreate(body, session);
+      }
+
+      const result = await collection.insertOne(data);
+
+      if (config.afterCreate) {
+        await config.afterCreate(data, session);
+      }
+
+      return Response.json({ success: true, data: { id: result.insertedId } });
+    } catch (error) {
+      return Response.json(
+        { success: false, error: (error as Error).message },
+        { status: 400 }
+      );
+    }
+  };
+
+  const PATCH = async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
+    try {
+      //   const session = await checkAuth(config, request);
+      const collection = await getCollection(config.entity);
+
+      const { id } = await params;
+      const body = await request.json();
+      let data = body;
+
+      //   if (config.beforeUpdate) {
+      //     data = await config.beforeUpdate(body, session, id);
+      //   }
+
+      const result = await collection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: data }
+      );
+
+      if (result.matchedCount === 0) {
+        return Response.json(
+          { success: false, error: "Document not found" },
+          { status: 404 }
+        );
+      }
+
+      //   if (config.afterUpdate) {
+      //     await config.afterUpdate(data, session, id);
+      //   }
+
+      return Response.json({ success: true, data: { id: id } });
+    } catch (error) {
+      console.log("error in PATCH", error);
+      return Response.json(
+        { success: false, error: (error as Error).message },
+        { status: 400 }
+      );
+    }
+  };
+
+  const DELETE = async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
+    try {
+      const session = await checkAuth(config, request);
+
+      const { id } = await params;
+
+      if (config.beforeDelete) {
+        const canDelete = await config.beforeDelete(session, id);
+        if (!canDelete) {
+          return Response.json(
+            { success: false, error: "Cannot delete this document" },
+            { status: 403 }
+          );
+        }
+      }
+
+      const collection = await getCollection(config.entity);
+      const result = await collection.deleteOne({
+        _id: new ObjectId(String(id)),
+      });
+
+      if (result.deletedCount === 0) {
+        return Response.json(
+          { success: false, error: "Document not found" },
+          { status: 404 }
+        );
+      }
+
+      if (config.afterDelete) {
+        await config.afterDelete(id, session);
+      }
+
+      return Response.json({ success: true, data: { id: id } });
+    } catch (error) {
+      return Response.json(
+        { success: false, error: (error as Error).message },
+        { status: 400 }
+      );
+    }
+  };
+
+  return {
+    GET,
+    GET_BY_ID,
+    POST,
+    PATCH,
+    DELETE,
+  };
+}
+
+export function createCrudRoute(config: CrudConfig) {
+  return generateCrudRoutes(config);
+}

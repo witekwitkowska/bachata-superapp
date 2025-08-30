@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Row, ToggleButton, useTheme } from "@once-ui-system/core";
+import { ToggleButton, useTheme } from "@once-ui-system/core";
 
 export const ThemeToggle: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -20,10 +20,23 @@ export const ThemeToggle: React.FC = () => {
   const icon = currentTheme === "dark" ? "light" : "dark";
   const nextTheme = currentTheme === "light" ? "dark" : "light";
 
+  const handleThemeChange = () => {
+    // Update Once UI System theme
+    setTheme(nextTheme);
+
+    // Also update Tailwind CSS dark mode
+    const html = document.documentElement;
+    if (nextTheme === "dark") {
+      html.classList.add("dark");
+    } else {
+      html.classList.remove("dark");
+    }
+  };
+
   return (
     <ToggleButton
       prefixIcon={icon}
-      onClick={() => setTheme(nextTheme)}
+      onClick={handleThemeChange}
       aria-label={`Switch to ${nextTheme} mode`}
     />
   );

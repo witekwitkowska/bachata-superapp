@@ -1,4 +1,23 @@
 import { z } from "zod";
+import { string } from "zod";
+import {
+  NAME_VALIDATION_REGEX,
+  PHONE_VALIDATION_REGEX,
+  VALIDATION_MESSAGES,
+} from "./validation-constants";
+
+// Common validation schemas for reuse across forms
+export const nameValidation = string()
+  .min(1, VALIDATION_MESSAGES.NAME_REQUIRED)
+  .regex(NAME_VALIDATION_REGEX, VALIDATION_MESSAGES.NAME_INVALID);
+
+export const emailValidation = string()
+  .min(1, VALIDATION_MESSAGES.EMAIL_REQUIRED)
+  .email(VALIDATION_MESSAGES.EMAIL_INVALID);
+
+export const phoneValidation = string()
+  .min(1, VALIDATION_MESSAGES.PHONE_REQUIRED)
+  .regex(PHONE_VALIDATION_REGEX, VALIDATION_MESSAGES.PHONE_INVALID);
 
 export const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -24,6 +43,18 @@ export const userUpdateSchema = z.object({
   role: z.enum(["visitor", "user", "team", "admin"]).optional(),
   status: z.enum(["active", "inactive", "pending"]).optional(),
   companyId: z.string().optional(),
+});
+
+export const userEditSchema = z.object({
+  name: nameValidation,
+  email: emailValidation,
+  bio: z.string().optional(),
+  location: z.string().optional(),
+  // website: z.string().url().optional().or(z.literal("")),
+  // bachataLevel: z
+  //   .enum(["beginner", "intermediate", "advanced", "expert"])
+  //   .optional(),
+  // avatar: z.string().optional(),
 });
 
 export const passwordChangeSchema = z

@@ -32,7 +32,7 @@ export default function MultiSelector({ options, selected, setSelected }: { opti
                             ))}
                         </div>
                     ) : (
-                        "Seleccionar"
+                        "Select"
                     )}
                     <ChevronDown className="ml-auto h-4 w-4" />
                 </Button>

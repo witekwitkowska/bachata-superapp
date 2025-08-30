@@ -12,6 +12,7 @@ export async function serverFetch(url: string, errorMessage: string) {
       ? url
       : `${protocol}://${host}${url}`;
 
+    console.log(fullUrl, "is fullUrl in serverFetch");
     const response = await fetch(fullUrl, {
       headers: {
         "Content-Type": "application/json",
@@ -22,6 +23,10 @@ export async function serverFetch(url: string, errorMessage: string) {
 
     if (!response.ok) {
       const error = await response.json();
+      console.log(
+        error instanceof Error ? error.message : error,
+        "is error in serverFetch"
+      );
       throw new Error(
         error.message ||
           error.error ||
