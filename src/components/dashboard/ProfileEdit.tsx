@@ -131,7 +131,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                                 value: "gallery",
                             }].map((item) => (
                                 <div className="space-y-4">
-                                    <h2 className="text-2xl font-bold">Banner</h2>
+                                    <h2 className="text-2xl font-bold">{item.label}</h2>
                                     <ImageUploadWithPreview
                                         onImagesChange={(images) => {
                                             console.log(images, 'images');

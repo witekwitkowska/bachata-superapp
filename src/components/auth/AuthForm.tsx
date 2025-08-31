@@ -110,7 +110,7 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
             <Card className="border-0 shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
                 <CardHeader className="space-y-1 pb-4">
                     <motion.div variants={itemVariants}>
-                        <CardTitle className="--font-heading text-gray-900 dark:text-gray-400 text-2xl font-bold text-center">
+                        <CardTitle className="font-heading text-gray-900 dark:text-gray-400 text-2xl font-bold text-center uppercase">
                             {isLogin ? "Welcome back" : "Create account"}
                         </CardTitle>
                     </motion.div>
