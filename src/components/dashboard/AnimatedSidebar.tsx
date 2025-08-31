@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, User, Settings, BookOpen, Home, GraduationCap } from "lucide-react";
+import { Menu, X, User, Settings, BookOpen, Home, GraduationCap, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "react-responsive";
+import { signOut } from "next-auth/react";
 
 const navigation = [
     { id: "overview", label: "Overview", icon: Home, href: "/dashboard" },
@@ -97,6 +98,11 @@ export function AnimatedSidebar() {
                                 </Link>
                             );
                         })}
+                        <Button variant="outline" size="sm" onClick={() => {
+                            signOut();
+                        }}>
+                            <LogOut className="w-4 h-4" />
+                        </Button>
                     </nav>
 
                     {/* Sidebar Footer */}

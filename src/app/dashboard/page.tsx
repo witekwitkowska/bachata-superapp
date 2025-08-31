@@ -1,9 +1,14 @@
 import { auth } from "@/auth";
 import { AnimatedWelcomeSection } from "@/components/dashboard/AnimatedWelcomeSection";
 import { AnimatedStatsGrid } from "@/components/dashboard/AnimatedStatsGrid";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
     const session = await auth();
+
+    if (!session?.user?.id) {
+        return redirect("/auth/signin");
+    }
 
     return (
         <div className="w-full container mx-auto px-4 py-8">
