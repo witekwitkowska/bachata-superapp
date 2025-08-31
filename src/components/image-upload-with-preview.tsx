@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, X, Image as ImageIcon, Trash2, Crown, GripVertical } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Import the compression function
 const compressImage = (
@@ -126,7 +126,6 @@ export function ImageUploadWithPreview({
     onImagesReorder,
     currentProfilePhoto = "",
 }: ImageUploadWithPreviewProps) {
-    const { toast } = useToast();
     const [uploadedFiles, setUploadedFiles] = useState<ImageData[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [draggedImage, setDraggedImage] = useState<string | null>(null);
@@ -151,10 +150,8 @@ export function ImageUploadWithPreview({
         const fileArray = Array.from(files);
         const validFiles = fileArray.filter(file => {
             if (!file.type.startsWith('image/')) {
-                toast({
-                    title: "Invalid File",
+                toast.error("Invalid File", {
                     description: `${file.name} is not an image file. Please select only image files.`,
-                    variant: "destructive",
                 });
                 return false;
             }
@@ -166,10 +163,8 @@ export function ImageUploadWithPreview({
         // Check if we're at the limit
         const totalImages = existingImages.length + uploadedFiles.length + validFiles.length;
         if (totalImages > maxImages) {
-            toast({
-                title: "Too Many Images",
+            toast.error("Too Many Images", {
                 description: `Maximum ${maxImages} images allowed. You can upload ${maxImages - existingImages.length - uploadedFiles.length} more.`,
-                variant: "destructive",
             });
             return;
         }
@@ -225,6 +220,8 @@ export function ImageUploadWithPreview({
 
                 const result = await response.json();
 
+                console.log(result, 'result');
+
                 if (!result.success) {
                     throw new Error(result.message || 'Upload failed');
                 }
@@ -237,6 +234,9 @@ export function ImageUploadWithPreview({
             // Update local state
             setUploadedFiles(prev => [...prev, ...uploadedResults]);
 
+
+            console.log(uploadedResults, 'uploadedResults', uploadedFiles);
+
             // Update parent component
             const allImageUrls = [...existingImages, ...uploadedFiles, ...uploadedResults].map(img =>
                 typeof img === 'string' ? img : img.url
@@ -248,17 +248,14 @@ export function ImageUploadWithPreview({
                 onUploadedImagesChange([...uploadedFiles, ...uploadedResults]);
             }
 
-            toast({
-                title: "Upload Successful",
+            toast.success("Upload Successful", {
                 description: `Successfully uploaded ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
             });
 
         } catch (error) {
             console.error('Upload error:', error);
-            toast({
-                title: "Upload Failed",
+            toast.error("Upload Failed", {
                 description: error instanceof Error ? error.message : "Failed to upload one or more images. Please try again.",
-                variant: "destructive",
             });
         } finally {
             setIsUploading(false);
@@ -307,12 +304,11 @@ export function ImageUploadWithPreview({
     const handleProfilePhotoSelect = useCallback((imageUrl: string) => {
         if (onProfilePhotoChange) {
             onProfilePhotoChange(imageUrl);
-            toast({
-                title: "Profile Photo Updated",
+            toast.success("Profile Photo Updated", {
                 description: "Profile photo has been set successfully!",
             });
         }
-    }, [onProfilePhotoChange, toast]);
+    }, [onProfilePhotoChange]);
 
     const handleDragStart = useCallback((e: React.DragEvent, imageUrl: string) => {
         if (!allowReordering) return;
@@ -365,8 +361,7 @@ export function ImageUploadWithPreview({
         setDraggedImage(null);
         setDragOverImage(null);
 
-        toast({
-            title: "Images Reordered",
+        toast.success("Images Reordered", {
             description: "Image order has been updated successfully!",
         });
     }, [allowReordering, draggedImage, allImages, onImagesChange, onImagesReorder, toast]);

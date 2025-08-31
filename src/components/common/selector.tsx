@@ -19,14 +19,14 @@ export default function Selector({
 
     return (
         <Select onValueChange={setSelectedValue} value={value ?? undefined}>
-            <SelectTrigger className="px-8 border rounded dark:text-white text-[#374151]">
+            <SelectTrigger className="px-8 border rounded text-primary">
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent className="dark:bg-background bg-white">
+            <SelectContent className="bg-background">
                 {options.map(option => (
                     <SelectItem
                         key={option.value}
-                        className="dark:text-white text-[#2D2D31]"
+                        className="text-primary"
                         value={option.value}
                     >
                         {option.label}

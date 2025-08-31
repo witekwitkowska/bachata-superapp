@@ -24,24 +24,26 @@ export interface CrudConfig<T = any> {
     id: string
   ) => Promise<void> | void;
   afterDelete?: (id: string, session: any) => Promise<void> | void;
+  exposeInternalCall?: boolean;
 }
 
 export async function checkAuth(config: CrudConfig, request?: NextRequest) {
-  console.log("checkAuth1");
-  if (!config.auth) return null;
+  if (!config.auth || request?.method === "GET") return null;
 
-  console.log("auth2");
   const session = await auth();
-  console.log("session3", session);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
-  console.log("session4", session);
+  if (
+    !config.exposeInternalCall &&
+    request?.headers.get("X-Internal-Call") === "true"
+  ) {
+    return session;
+  }
 
   if (config.roles && !config.roles.includes(session.user.role)) {
     throw new Error("Insufficient permissions");
   }
-  console.log("session5", session);
 
   return session;
 }
@@ -152,16 +154,16 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
     { params }: { params: { id: string } }
   ) => {
     try {
-      //   const session = await checkAuth(config, request);
+      const session = await checkAuth(config, request);
       const collection = await getCollection(config.entity);
 
       const { id } = await params;
       const body = await request.json();
       let data = body;
 
-      //   if (config.beforeUpdate) {
-      //     data = await config.beforeUpdate(body, session, id);
-      //   }
+      if (config.beforeUpdate) {
+        data = await config.beforeUpdate(body, session, id);
+      }
 
       const result = await collection.updateOne(
         { _id: new ObjectId(id) },

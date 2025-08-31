@@ -1,23 +1,15 @@
 import { z } from "zod";
 import { createCrudRoute } from "@/lib/api/crud-generator";
-
-// Schema for user updates
-export const userUpdateSchema = z.object({
-  id: z.string(),
-  name: z.string().min(2, "Name must be at least 2 characters").optional(),
-  email: z.string().email("Invalid email address").optional(),
-  role: z.enum(["visitor", "user", "team", "admin"]).optional(),
-  status: z.enum(["active", "inactive", "pending"]).optional(),
-  companyId: z.string().optional(),
-});
+import { userUpdateSchema } from "@/lib/zod";
+import { ObjectId } from "mongodb";
 
 export type UserUpdateData = z.infer<typeof userUpdateSchema>;
 
 // CRUD configuration for users
 export const userCrudConfig = {
   entity: "users",
-  auth: false,
-  roles: ["visitor", "user", "team", "admin"],
+  auth: true,
+  roles: ["admin", "visitor"],
   schema: userUpdateSchema,
   projection: { password: 0 } as Record<string, 0 | 1>,
   sort: { createdAt: -1 as const },
@@ -36,7 +28,12 @@ export const userCrudConfig = {
       throw new Error("Forbidden: Can only update your own profile");
     }
 
-    return data;
+    return {
+      ...data,
+      updatedByName: session.user.name,
+      updatedById: new ObjectId(String(session.user.id)),
+      updatedAt: new Date(),
+    };
   },
   beforeDelete: async (session: any, id: string) => {
     // Only admins can delete users

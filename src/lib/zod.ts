@@ -38,11 +38,17 @@ export const signUpSchema = z
 
 export const userUpdateSchema = z.object({
   id: z.string(),
-  name: z.string().min(2, "Name must be at least 2 characters").optional(),
-  email: z.string().email("Invalid email address").optional(),
+  name: nameValidation,
+  email: emailValidation,
   role: z.enum(["visitor", "user", "team", "admin"]).optional(),
   status: z.enum(["active", "inactive", "pending"]).optional(),
   companyId: z.string().optional(),
+});
+
+export const userEditImagesSchema = z.object({
+  banners: z.array(z.string()).optional(),
+  avatars: z.array(z.string()).optional(),
+  gallery: z.array(z.string()).optional(),
 });
 
 export const userEditSchema = z.object({
@@ -53,6 +59,7 @@ export const userEditSchema = z.object({
   website: z.url().optional(),
   bachataLevel: z.string().optional(),
   // avatar: z.string().optional(),
+  //date of birth
 });
 
 export const passwordChangeSchema = z

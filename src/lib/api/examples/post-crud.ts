@@ -16,7 +16,7 @@ export type PostData = z.infer<typeof postSchema>;
 export const postCrudConfig = {
   entity: "posts",
   auth: true,
-  roles: ["admin", "user"],
+  roles: ["admin", "visitor"],
   schema: postSchema,
   projection: { __v: 0 } as Record<string, 0 | 1>,
   sort: { createdAt: -1 as const },

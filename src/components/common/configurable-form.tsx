@@ -13,7 +13,7 @@ import { getZodRequiredFields } from "@/lib/utils";
 import { CompactInput } from "@/components/ui/compact-input";
 import { StatefulButton, StatefulButtonRef } from "../ui/stateful-button";
 
-type CustomFormProps<T extends z.ZodType<any, any>> = {
+type ConfigurableFormProps<T extends z.ZodType<any, any>> = {
     formSchema: T;
     endpoint: string;
     entityName: string;
@@ -36,13 +36,13 @@ type CustomFormProps<T extends z.ZodType<any, any>> = {
     onError?: (error: any) => void;
 };
 
-export type CustomFormRef<T extends z.ZodType<any, any>> = {
+export type ConfigurableFormRef<T extends z.ZodType<any, any>> = {
     setValue: UseFormSetValue<z.infer<T>>;
     getValues: () => z.infer<T>;
     loading: boolean;
 };
 
-export const CustomForm = forwardRef(function CustomForm<T extends z.ZodType<any, any>>({
+export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z.ZodType<any, any>>({
     formSchema,
     endpoint,
     entityName,
@@ -63,7 +63,7 @@ export const CustomForm = forwardRef(function CustomForm<T extends z.ZodType<any
     passwordList,
     dateList,
     containerClassName
-}: CustomFormProps<T>, ref: React.Ref<CustomFormRef<T>>) {
+}: ConfigurableFormProps<T>, ref: React.Ref<ConfigurableFormRef<T>>) {
     // Define the form data type
     type FormData = z.infer<T>;
 
@@ -101,7 +101,7 @@ export const CustomForm = forwardRef(function CustomForm<T extends z.ZodType<any
 
     const { isValid, isDirty, isSubmitting } = form.formState;
 
-    const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting;
+    const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading;
 
     return (
         <div className={containerClassName}>

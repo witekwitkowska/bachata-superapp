@@ -2,23 +2,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Session } from "next-auth";
-import { CustomForm } from "../common/custom-form";
-import { userEditSchema } from "@/lib/zod";
-
-interface UserProfile {
-    _id: string;
-    name: string;
-    email: string;
-    bio?: string;
-    bachataLevel?: string;
-    location?: string;
-    website?: string;
-}
-
-interface ProfileEditProps {
-    session: Session;
-    profile: UserProfile;
-}
+import { ConfigurableForm } from "@/components/common/configurable-form";
+import { userEditImagesSchema, userEditSchema } from "@/lib/zod";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ImageUploadWithPreview } from "../image-upload-with-preview";
+import { UserProfile } from "@/types/user";
+import { useCallback, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormWrapper, FormWrapperRef } from "../common/form-wrapper";
 
 const editProfileOptionsMap = {
     bachataLevel: [{
@@ -36,48 +27,139 @@ const editProfileOptionsMap = {
     }],
 }
 
-export function ProfileEdit({ session, profile }: ProfileEditProps) {
-    return (
-        <Card>
-            <CardContent className="p-6">
-                <CustomForm
+interface ProfileEditProps {
+    session: Session;
+    profile: UserProfile;
+    defaultTab: string;
+}
 
-                    className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
-                    formSchema={userEditSchema}
-                    endpoint={`/users-v2/${profile._id}`}
-                    endpointType="PATCH"
-                    entityName="user"
-                    displayNames={{
-                        name: "Name",
-                        email: "Email",
-                        bio: "Bio",
-                        location: "Location",
-                        website: "Website",
-                        bachataLevel: "Bachata Level",
-                    }}
-                    selectorList={["bachataLevel"]}
-                    optionsMap={editProfileOptionsMap}
-                    defaultValues={
-                        {
-                            name: profile?.name || "",
-                            email: profile?.email || "",
-                            bio: profile?.bio || "",
-                            location: profile?.location || "",
-                            website: profile?.website || "",
-                            bachataLevel: profile?.bachataLevel || "",
-                        }
-                    }
-                    extraData={{
-                        id: profile._id.toString(),
-                    }}
-                    buttonTitle="Save"
-                    headerTitle="Profile"
-                    loadingTitle="Saving..."
-                    onSuccess={() => {
-                        toast.success("Profile updated successfully");
-                    }}
-                />
-            </CardContent>
-        </Card>
+export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) {
+    const [activeTab, setActiveTab] = useState<string>(defaultTab);
+    const router = useRouter();
+    const handleSetActiveTab = (tab: string) => {
+        router.push(`/dashboard/profile?tab=${tab}`);
+        setActiveTab(tab);
+    };
+
+    const formWrapperRef = useRef<FormWrapperRef>(null);
+
+    const updateFormState = useCallback((field: string, value: any) => {
+        formWrapperRef.current?.setValue(field, value, { shouldValidate: true, shouldDirty: true });
+    }, []);
+
+    return (
+        <Tabs value={activeTab} onValueChange={handleSetActiveTab}>
+            <TabsList>
+                <TabsTrigger value="information">Information</TabsTrigger>
+                <TabsTrigger value="images">Images</TabsTrigger>
+            </TabsList>
+            <TabsContent value="information">
+                <Card>
+                    <CardContent className="p-6">
+                        <ConfigurableForm
+                            className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
+                            formSchema={userEditSchema}
+                            endpoint={`/users-v2/${profile._id}`}
+                            endpointType="PATCH"
+                            entityName="user"
+                            displayNames={{
+                                name: "Name",
+                                email: "Email",
+                                bio: "Bio",
+                                location: "Location",
+                                website: "Website",
+                                bachataLevel: "Bachata Level",
+                            }}
+                            selectorList={["bachataLevel"]}
+                            optionsMap={editProfileOptionsMap}
+                            defaultValues={
+                                {
+                                    name: profile?.name || "",
+                                    email: profile?.email || "",
+                                    bio: profile?.bio || "",
+                                    location: profile?.location || "",
+                                    website: profile?.website || "",
+                                    bachataLevel: profile?.bachataLevel || "",
+                                }
+                            }
+                            extraData={{
+                                id: profile._id.toString(),
+                            }}
+                            buttonTitle="Save"
+                            headerTitle="Profile"
+                            loadingTitle="Saving..."
+                            onSuccess={() => {
+                                toast.success("Profile updated successfully");
+                            }}
+                        />
+                    </CardContent>
+                </Card>
+            </TabsContent>
+            <TabsContent value="images">
+                <Card>
+                    <CardContent className="p-6">
+                        <FormWrapper
+                            ref={formWrapperRef}
+                            endpoint={`/users-v2/${profile._id}`}
+                            endpointType="PATCH"
+                            entityName="user"
+                            buttonTitle="Save"
+                            formSchema={userEditImagesSchema}
+                            defaultValues={{
+                                banners: profile.banners || [],
+                                avatars: profile.avatars || [],
+                                gallery: profile.gallery || [],
+                            }}
+                            extraData={{
+                                id: profile._id.toString(),
+                            }}
+                            onError={(error) => {
+                                toast.error("Error updating images");
+                            }}
+                            onSuccess={() => {
+                                toast.success("Images updated successfully");
+                            }}
+                        >
+                            {[{
+                                label: "Banner",
+                                value: "banners",
+                            }, {
+                                label: "Avatar",
+                                value: "avatars",
+                            }, {
+                                label: "Gallery",
+                                value: "gallery",
+                            }].map((item) => (
+                                <div className="space-y-4">
+                                    <h2 className="text-2xl font-bold">Banner</h2>
+                                    <ImageUploadWithPreview
+                                        onImagesChange={(images) => {
+                                            console.log(images, 'images');
+                                            updateFormState(item.value, images);
+                                        }}
+                                        existingImages={formWrapperRef.current?.getValues()[item.value] || profile[item.value as keyof UserProfile]}
+                                        maxImages={15}
+                                        multiple
+                                        showExistingImages
+                                        allowRemoveExisting
+                                        allowProfilePhotoSelection={false}
+                                        allowReordering
+                                        // currentProfilePhoto={formWrapperRef.current?.getValues()[`selected.${item.value}`]}
+                                        onProfilePhotoChange={(imageUrl) => {
+                                            console.log(imageUrl, 'imageUrl');
+                                            // Update formState.profilePhoto to ensure it's included in form submission
+                                            updateFormState(`selected.${item.value}`, imageUrl || "");
+                                        }}
+                                        onImagesReorder={(reorderedImages) => {
+                                            updateFormState(`${item.value}`, reorderedImages);
+                                        }}
+                                    />
+                                </div>))}
+                        </FormWrapper>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs >
+
     );
 }

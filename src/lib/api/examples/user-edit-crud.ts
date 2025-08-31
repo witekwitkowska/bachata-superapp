@@ -1,14 +1,15 @@
 import { NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { userEditSchema } from "@/lib/zod";
+import { userEditImagesSchema, userEditSchema } from "@/lib/zod";
 import { ObjectId } from "mongodb";
 import { auth } from "@/auth";
+import z from "zod";
 
 export const userEditCrudConfig = {
   entity: "userProfiles",
   auth: true,
   roles: ["admin", "user"],
-  schema: userEditSchema,
+  schema: z.union([userEditSchema, userEditImagesSchema]),
   projection: { password: 0 },
   customFilters: (session: any) => ({
     userId: session?.user?.id,
