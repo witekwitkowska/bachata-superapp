@@ -129,7 +129,7 @@ export const CustomForm = forwardRef(function CustomForm<T extends z.ZodType<any
                             name={fieldKey as Path<FormData>}
                             render={({ field }) => (
                                 selectorList?.includes(fieldKey) ? (
-                                    <FormItem>
+                                    <FormItem className="space-y-0">
                                         <FormLabel>
                                             {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                         </FormLabel>

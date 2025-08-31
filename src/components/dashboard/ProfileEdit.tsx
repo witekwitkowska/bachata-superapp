@@ -41,6 +41,8 @@ export function ProfileEdit({ session, profile }: ProfileEditProps) {
         <Card>
             <CardContent className="p-6">
                 <CustomForm
+
+                    className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
                     formSchema={userEditSchema}
                     endpoint={`/users-v2/${profile._id}`}
                     endpointType="PATCH"
@@ -50,10 +52,10 @@ export function ProfileEdit({ session, profile }: ProfileEditProps) {
                         email: "Email",
                         bio: "Bio",
                         location: "Location",
-                        // website: "Website",
-                        // bachataLevel: "Bachata Level",
+                        website: "Website",
+                        bachataLevel: "Bachata Level",
                     }}
-                    // selectorList={["bachataLevel", 'socialLinks', 'preferences']}
+                    selectorList={["bachataLevel"]}
                     optionsMap={editProfileOptionsMap}
                     defaultValues={
                         {
@@ -61,8 +63,8 @@ export function ProfileEdit({ session, profile }: ProfileEditProps) {
                             email: profile?.email || "",
                             bio: profile?.bio || "",
                             location: profile?.location || "",
-                            // website: profile?.website || "",
-                            // bachataLevel: profile?.bachataLevel || "",
+                            website: profile?.website || "",
+                            bachataLevel: profile?.bachataLevel || "",
                         }
                     }
                     extraData={{

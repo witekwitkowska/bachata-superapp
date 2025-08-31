@@ -40,7 +40,7 @@ export function AnimatedSidebar() {
                 initial={{ x: isMobile ? -300 : 0 }}
                 animate={{ x: sidebarOpen ? 0 : isMobile ? -300 : 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className={`${isMobile ? "inset-y-0 left-0" : "fixed"} z-40 w-72 shadow-2xl backdrop-blur-sm border-r border-gray-200/50 dark:border-gray-700/50 lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                className={`${isMobile ? "fixed inset-y-0 left-0" : ""} z-40 w-72 shadow-2xl backdrop-blur-sm border-r border-gray-200/50 dark:border-gray-700/50 lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     } lg:translate-x-0`}
             >
                 <div className="flex flex-col h-full">
@@ -70,14 +70,14 @@ export function AnimatedSidebar() {
                                     href={item.href}
                                     onClick={() => setSidebarOpen(false)}
                                     className={`group flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 ${isActive
-                                            ? "border border-blue-200/50 dark:border-blue-700/50 shadow-lg shadow-blue-500/10"
-                                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/50 hover:scale-[1.02] hover:shadow-md"
+                                        ? "border border-blue-200/50 dark:border-blue-700/50 shadow-lg shadow-blue-500/10"
+                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-700/50 hover:scale-[1.02] hover:shadow-md"
                                         }`}
                                 >
                                     <div
                                         className={`p-2 rounded-lg transition-all duration-300 ${isActive
-                                                ? "text-white shadow-lg"
-                                                : "group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30"
+                                            ? "text-white shadow-lg"
+                                            : "group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30"
                                             }`}
                                     >
                                         <Icon

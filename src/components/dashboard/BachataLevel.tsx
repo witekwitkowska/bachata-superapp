@@ -6,6 +6,7 @@ import { BookOpen, Star, Award, Clock, Users, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface BachataLevelData {
     currentLevel: string;
@@ -291,7 +292,7 @@ export function BachataLevel() {
                     {/* Notes */}
                     <div className="space-y-2">
                         <Label htmlFor="notes">Additional Notes</Label>
-                        <textarea
+                        <Textarea
                             id="notes"
                             value={levelData.notes}
                             onChange={(e) => handleInputChange("notes", e.target.value)}

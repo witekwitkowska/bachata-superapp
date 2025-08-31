@@ -11,7 +11,7 @@ export default async function DashboardLayout({
             <AnimatedSidebar />
 
             {/* Main Content */}
-            <div className="w-full lg:ml-72 min-h-screen">
+            <div className="w-full lg:ml-72 ml-0 min-h-screen">
                 {/* Content Header */}
                 <div className="backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50 px-6 py-4 sticky top-0 z-30">
                     <div className="flex items-center justify-between">

@@ -19,7 +19,7 @@ export default function Selector({
 
     return (
         <Select onValueChange={setSelectedValue} value={value ?? undefined}>
-            <SelectTrigger className="p-2 border rounded dark:text-white text-[#374151]">
+            <SelectTrigger className="px-8 border rounded dark:text-white text-[#374151]">
                 <SelectValue placeholder={placeholder} />
             </SelectTrigger>
             <SelectContent className="dark:bg-background bg-white">

@@ -6,7 +6,7 @@ export default async function DashboardPage() {
     const session = await auth();
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full container mx-auto px-4 py-8">
             <AnimatedWelcomeSection
                 userName={session?.user?.name || "User"}
                 userRole={session?.user?.role || "visitor"}

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TeacherData {
     isTeacher: boolean;
@@ -371,7 +372,7 @@ export function TeacherToggle() {
                             {/* Bio */}
                             <div className="space-y-2">
                                 <Label htmlFor="bio">Teaching Bio</Label>
-                                <textarea
+                                <Textarea
                                     id="bio"
                                     value={teacherData.bio}
                                     onChange={(e) => handleInputChange("bio", e.target.value)}

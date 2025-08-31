@@ -50,10 +50,8 @@ export const userEditSchema = z.object({
   email: emailValidation,
   bio: z.string().optional(),
   location: z.string().optional(),
-  // website: z.string().url().optional().or(z.literal("")),
-  // bachataLevel: z
-  //   .enum(["beginner", "intermediate", "advanced", "expert"])
-  //   .optional(),
+  website: z.url().optional(),
+  bachataLevel: z.string().optional(),
   // avatar: z.string().optional(),
 });
 
