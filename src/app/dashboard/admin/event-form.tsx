@@ -10,6 +10,7 @@ import {
     privateSessionSchema,
     workshopSchema,
 } from "@/lib/zod";
+import { formatFieldName, getSchemaFields } from "@/utils";
 import type { Event } from "@/types";
 import type { z } from "zod";
 
@@ -28,9 +29,11 @@ type WorkshopInput = z.infer<typeof workshopSchema>;
 
 export function EventForm({ eventType, initialData, onSubmit, onCancel }: EventFormProps) {
     const [locations, setLocations] = useState<Array<{ id: string; name: string }>>([]);
+    const [users, setUsers] = useState<Array<{ id: string; name: string; role: string }>>([]);
 
     useEffect(() => {
         fetchLocations();
+        fetchUsers();
     }, []);
 
     const fetchLocations = async () => {
@@ -42,6 +45,18 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel }: EventF
             }
         } catch (error) {
             console.error("Error fetching locations:", error);
+        }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch("/api/users");
+            const data = await response.json();
+            if (data.success) {
+                setUsers(data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching users:", error);
         }
     };
 
@@ -61,63 +76,20 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel }: EventF
     };
 
     const getDisplayNames = () => {
-        const baseDisplayNames = {
-            title: "Title",
-            description: "Description",
-            time: "Date & Time",
-            isPaid: "Paid Event",
-            locationId: "Location",
-            published: "Published",
-            price: "Price",
-            currency: "Currency",
-            maxAttendees: "Max Attendees",
-        };
+        // Get the schema for the current event type
+        const schema = getSchema();
 
-        const socialDisplayNames = {
-            ...baseDisplayNames,
-            musicStyle: "Music Style",
-            dressCode: "Dress Code",
-            includesFood: "Includes Food",
-            includesDrinks: "Includes Drinks",
-        };
+        // Extract display names from schema shape, excluding 'type'
+        const schemaFields = getSchemaFields(schema, ['type']);
 
-        const festivalDisplayNames = {
-            ...baseDisplayNames,
-            startDate: "Start Date",
-            endDate: "End Date",
-            performers: "Performers",
-        };
+        // Create display names using the utility function
+        const displayNames: Record<string, string> = {};
 
-        const privateSessionDisplayNames = {
-            ...baseDisplayNames,
-            teacherId: "Teacher ID",
-            studentId: "Student ID",
-            duration: "Duration (minutes)",
-            skillLevel: "Skill Level",
-            notes: "Notes",
-        };
-
-        const workshopDisplayNames = {
-            ...baseDisplayNames,
-            teacherId: "Teacher ID",
-            maxStudents: "Max Students",
-            skillLevel: "Skill Level",
-            materials: "Materials",
-            prerequisites: "Prerequisites",
-        };
-
-        switch (eventType) {
-            case "social":
-                return socialDisplayNames;
-            case "festival":
-                return festivalDisplayNames;
-            case "private-session":
-                return privateSessionDisplayNames;
-            case "workshop":
-                return workshopDisplayNames;
-            default:
-                return baseDisplayNames;
+        for (const field of schemaFields) {
+            displayNames[field] = formatFieldName(field);
         }
+
+        return displayNames;
     };
 
     const getOptionsMap = () => {
@@ -136,33 +108,64 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel }: EventF
                 { value: "intermediate", label: "Intermediate" },
                 { value: "advanced", label: "Advanced" },
             ],
+            // Add options for ID fields that will be auto-detected
+            teacherId: users.filter(user => user.role === 'teacher' || user.role === 'admin').map(user => ({
+                value: user.id,
+                label: user.name,
+            })),
+            studentId: users.filter(user => user.role === 'user' || user.role === 'student').map(user => ({
+                value: user.id,
+                label: user.name,
+            })),
+            organizerId: users.filter(user => user.role === 'admin' || user.role === 'organizer').map(user => ({
+                value: user.id,
+                label: user.name,
+            })),
         };
 
         return baseOptionsMap;
     };
 
     const getDefaultValues = () => {
-        const baseDefaults = {
-            title: "",
-            description: "",
-            time: new Date(),
-            isPaid: false,
-            locationId: "",
-            published: false,
-            price: 0,
-            currency: "USD",
-            maxAttendees: undefined,
-        };
+        // Get the schema for the current event type
+        const schema = getSchema();
 
+        try {
+            // Parse with minimal data including the required 'type' field
+            const baseDefaults = schema.parse({ type: eventType });
 
-        if (initialData) {
-            return {
-                ...baseDefaults,
-                ...initialData,
+            // Override with initial data if provided
+            if (initialData) {
+                return {
+                    ...baseDefaults,
+                    ...initialData,
+                };
+            }
+
+            return baseDefaults;
+        } catch (error) {
+            console.error("Error getting schema defaults:", error);
+            // Fallback to basic defaults if schema parsing fails
+            const fallbackDefaults = {
+                title: "",
+                description: "",
+                time: new Date(),
+                isPaid: false,
+                locationId: "",
+                published: false,
+                price: 0,
+                currency: "USD",
             };
-        }
 
-        return baseDefaults;
+            if (initialData) {
+                return {
+                    ...fallbackDefaults,
+                    ...initialData,
+                };
+            }
+
+            return fallbackDefaults;
+        }
     };
 
     return (
@@ -176,8 +179,9 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel }: EventF
                 buttonTitle={initialData ? "Update Event" : "Create Event"}
                 headerTitle={`${initialData ? "Edit" : "Add New"} ${eventType.charAt(0).toUpperCase() + eventType.slice(1)}`}
                 loadingTitle="Saving..."
-                selectorList={["locationId", "currency", "skillLevel"]}
-                switchList={["isPaid", "published"]}
+                selectorList={undefined}
+                switchList={undefined}
+                exclusionList={["type"]}
                 optionsMap={getOptionsMap()}
                 dateList={["time", "startDate", "endDate"]}
                 className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"

@@ -92,7 +92,7 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
   const GET_BY_ID = async (
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
   ) => {
     try {
       const session = await checkAuth(config, request);
@@ -151,7 +151,7 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
   const PATCH = async (
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
   ) => {
     try {
       const session = await checkAuth(config, request);
@@ -193,7 +193,7 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
   const DELETE = async (
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
   ) => {
     try {
       const session = await checkAuth(config, request);

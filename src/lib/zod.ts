@@ -21,28 +21,29 @@ export const phoneValidation = string()
 
 // Location Schema
 export const locationSchema = z.object({
-  name: z.string().min(1, "Location name is required"),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  country: z.string().min(1, "Country is required"),
+  name: z.string().min(1, "Location name is required").default(""),
+  address: z.string().min(1, "Address is required").default(""),
+  city: z.string().min(1, "City is required").default(""),
+  country: z.string().min(1, "Country is required").default(""),
   coordinates: z
     .object({
-      lat: z.number(),
-      lng: z.number(),
+      lat: z.number().default(0),
+      lng: z.number().default(0),
     })
-    .optional(),
+    .optional()
+    .default({ lat: 0, lng: 0 }),
 });
 
 // Base Event Schema
 export const baseEventSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  time: z.date(),
+  title: z.string().min(1, "Title is required").default(""),
+  description: z.string().min(1, "Description is required").default(""),
+  time: z.date().default(() => new Date()),
   type: z.enum(["social", "festival", "private-session", "workshop"]),
-  isPaid: z.boolean(),
-  locationId: z.string().min(1, "Location is required"),
-  price: z.number().min(0).optional(),
-  currency: z.string().optional(),
+  isPaid: z.boolean().default(false),
+  locationId: z.string().min(1, "Location is required").default(""),
+  price: z.number().min(0).default(0).optional(),
+  currency: z.string().default("EUR").optional(),
   maxAttendees: z.number().min(1).optional(),
   published: z.boolean().default(false),
 });
@@ -50,48 +51,53 @@ export const baseEventSchema = z.object({
 // Social Event Schema
 export const socialEventSchema = baseEventSchema.extend({
   type: z.literal("social"),
-  organizerId: z.string().min(1, "Organizer is required"),
-  musicStyle: z.string().optional(),
-  dressCode: z.string().optional(),
-  includesFood: z.boolean().optional(),
-  includesDrinks: z.boolean().optional(),
+  organizerId: z.string().min(1, "Organizer is required").default(""),
+  musicStyle: z.string().default("").optional(),
+  dressCode: z.string().default("").optional(),
+  includesFood: z.boolean().default(false).optional(),
+  includesDrinks: z.boolean().default(false).optional(),
 });
 
 // Festival Event Schema
 export const festivalEventSchema = baseEventSchema
   .extend({
     type: z.literal("festival"),
-    organizerId: z.string().min(1, "Organizer is required"),
-    startDate: z.date(),
-    endDate: z.date(),
+    organizerId: z.string().min(1, "Organizer is required").default(""),
+    startDate: z.date().default(() => new Date()),
+    endDate: z.date().default(() => new Date(Date.now() + 24 * 60 * 60 * 1000)), // Tomorrow
     attendeeIds: z.array(z.string()).default([]),
     performers: z
       .array(z.string())
-      .min(1, "At least one performer is required"),
+      .min(1, "At least one performer is required")
+      .default([]),
     schedule: z
       .array(
         z.object({
-          day: z.number(),
-          events: z.array(
-            z.object({
-              time: z.string(),
-              title: z.string(),
-              description: z.string(),
-              performer: z.string().optional(),
-            })
-          ),
+          day: z.number().default(1),
+          events: z
+            .array(
+              z.object({
+                time: z.string().default(""),
+                title: z.string().default(""),
+                description: z.string().default(""),
+                performer: z.string().default("").optional(),
+              })
+            )
+            .default([]),
         })
       )
-      .optional(),
+      .optional()
+      .default([]),
     accommodationOptions: z
       .array(
         z.object({
-          name: z.string(),
-          price: z.number(),
-          description: z.string(),
+          name: z.string().default(""),
+          price: z.number().default(0),
+          description: z.string().default(""),
         })
       )
-      .optional(),
+      .optional()
+      .default([]),
   })
   .refine((data) => data.endDate > data.startDate, {
     message: "End date must be after start date",
@@ -101,26 +107,34 @@ export const festivalEventSchema = baseEventSchema
 // Private Session Schema
 export const privateSessionSchema = baseEventSchema.extend({
   type: z.literal("private-session"),
-  teacherId: z.string().min(1, "Teacher is required"),
-  studentId: z.string().min(1, "Student is required"),
+  teacherId: z.string().min(1, "Teacher is required").default(""),
+  studentId: z.string().min(1, "Student is required").default(""),
   duration: z
     .number()
     .min(15, "Duration must be at least 15 minutes")
-    .max(480, "Duration cannot exceed 8 hours"),
-  skillLevel: z.enum(["beginner", "intermediate", "advanced"]),
-  focusAreas: z.array(z.string()).optional(),
-  notes: z.string().optional(),
+    .max(480, "Duration cannot exceed 8 hours")
+    .default(60),
+  skillLevel: z
+    .enum(["beginner", "intermediate", "advanced"])
+    .default("beginner"),
+  focusAreas: z.array(z.string()).default([]).optional(),
+  notes: z.string().default("").optional(),
 });
 
 // Workshop Schema
 export const workshopSchema = baseEventSchema.extend({
   type: z.literal("workshop"),
-  teacherId: z.string().min(1, "Teacher is required"),
-  skillLevel: z.enum(["beginner", "intermediate", "advanced"]),
-  maxStudents: z.number().min(1, "Maximum students must be at least 1"),
+  teacherId: z.string().min(1, "Teacher is required").default(""),
+  skillLevel: z
+    .enum(["beginner", "intermediate", "advanced"])
+    .default("beginner"),
+  maxStudents: z
+    .number()
+    .min(1, "Maximum students must be at least 1")
+    .default(20),
   enrolledStudents: z.array(z.string()).default([]),
-  materials: z.array(z.string()).optional(),
-  prerequisites: z.array(z.string()).optional(),
+  materials: z.array(z.string()).default([]).optional(),
+  prerequisites: z.array(z.string()).default([]).optional(),
 });
 
 // Union type for all events
@@ -149,27 +163,30 @@ export const signUpSchema = z
   });
 
 export const userUpdateSchema = z.object({
-  id: z.string(),
+  id: z.string().default(""),
   name: nameValidation,
   email: emailValidation,
-  role: z.enum(["visitor", "user", "team", "admin"]).optional(),
-  status: z.enum(["active", "inactive", "pending"]).optional(),
-  companyId: z.string().optional(),
+  role: z.enum(["visitor", "user", "team", "admin"]).default("user").optional(),
+  status: z
+    .enum(["active", "inactive", "pending"])
+    .default("active")
+    .optional(),
+  companyId: z.string().default("").optional(),
 });
 
 export const userEditImagesSchema = z.object({
-  banners: z.array(z.string()).optional(),
-  avatars: z.array(z.string()).optional(),
-  gallery: z.array(z.string()).optional(),
+  banners: z.array(z.string()).default([]).optional(),
+  avatars: z.array(z.string()).default([]).optional(),
+  gallery: z.array(z.string()).default([]).optional(),
 });
 
 export const userEditSchema = z.object({
   name: nameValidation,
   email: emailValidation,
-  bio: z.string().optional(),
-  location: z.string().optional(),
-  website: z.url().optional(),
-  bachataLevel: z.string().optional(),
+  bio: z.string().default("").optional(),
+  location: z.string().default("").optional(),
+  website: z.url().default("").optional(),
+  bachataLevel: z.string().default("beginner").optional(),
   // avatar: z.string().optional(),
   //date of birth
 });
