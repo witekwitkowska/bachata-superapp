@@ -1,15 +1,15 @@
-"use client";;
+"use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
 import { ConfigurableForm } from "@/components/common/configurable-form";
 import { userEditImagesSchema, userEditSchema } from "@/lib/zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImageUploadWithPreview } from "../image-upload-with-preview";
-import { UserProfile } from "@/types/user";
-import { useCallback, useRef, useState } from "react";
+import type { UserProfile } from "@/types/user";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FormWrapper, FormWrapperRef } from "../common/form-wrapper";
+import { FormWrapper, type FormWrapperRef } from "../common/form-wrapper";
 
 const editProfileOptionsMap = {
     bachataLevel: [{
@@ -42,10 +42,30 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
     };
 
     const formWrapperRef = useRef<FormWrapperRef>(null);
+    const [formValues, setFormValues] = useState({
+        banners: profile.banners || [],
+        avatars: profile.avatars || [],
+        gallery: profile.gallery || [],
+    });
 
-    const updateFormState = useCallback((field: string, value: any) => {
+    const updateFormState = useCallback((field: string, value: unknown) => {
+        console.log('Updating form state:', { field, value });
         formWrapperRef.current?.setValue(field, value, { shouldValidate: true, shouldDirty: true });
+        // Also update local state to ensure the component gets updated values
+        setFormValues(prev => ({
+            ...prev,
+            [field]: value
+        }));
     }, []);
+
+    // Sync form values when profile changes
+    useEffect(() => {
+        setFormValues({
+            banners: profile.banners || [],
+            avatars: profile.avatars || [],
+            gallery: profile.gallery || [],
+        });
+    }, [profile]);
 
     return (
         <Tabs value={activeTab} onValueChange={handleSetActiveTab}>
@@ -69,6 +89,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                                 location: "Location",
                                 website: "Website",
                                 bachataLevel: "Bachata Level",
+                                isPublic: "Public",
                             }}
                             selectorList={["bachataLevel"]}
                             optionsMap={editProfileOptionsMap}
@@ -80,8 +101,10 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                                     location: profile?.location || "",
                                     website: profile?.website || "",
                                     bachataLevel: profile?.bachataLevel || "",
+                                    isPublic: profile?.isPublic || false,
                                 }
                             }
+                            switchList={["isPublic"]}
                             extraData={{
                                 id: profile._id.toString(),
                             }}
@@ -105,11 +128,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                             entityName="user"
                             buttonTitle="Save"
                             formSchema={userEditImagesSchema}
-                            defaultValues={{
-                                banners: profile.banners || [],
-                                avatars: profile.avatars || [],
-                                gallery: profile.gallery || [],
-                            }}
+                            defaultValues={formValues}
                             extraData={{
                                 id: profile._id.toString(),
                             }}
@@ -130,29 +149,19 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                                 label: "Gallery",
                                 value: "gallery",
                             }].map((item) => (
-                                <div className="space-y-4">
+                                <div className="space-y-4" key={item.value}>
                                     <h2 className="text-2xl font-bold">{item.label}</h2>
                                     <ImageUploadWithPreview
                                         onImagesChange={(images) => {
                                             console.log(images, 'images');
                                             updateFormState(item.value, images);
                                         }}
-                                        existingImages={formWrapperRef.current?.getValues()[item.value] || profile[item.value as keyof UserProfile]}
+                                        existingImages={formValues[item.value as keyof typeof formValues]}
                                         maxImages={15}
                                         multiple
                                         showExistingImages
                                         allowRemoveExisting
-                                        allowProfilePhotoSelection={false}
                                         allowReordering
-                                        // currentProfilePhoto={formWrapperRef.current?.getValues()[`selected.${item.value}`]}
-                                        onProfilePhotoChange={(imageUrl) => {
-                                            console.log(imageUrl, 'imageUrl');
-                                            // Update formState.profilePhoto to ensure it's included in form submission
-                                            updateFormState(`selected.${item.value}`, imageUrl || "");
-                                        }}
-                                        onImagesReorder={(reorderedImages) => {
-                                            updateFormState(`${item.value}`, reorderedImages);
-                                        }}
                                     />
                                 </div>))}
                         </FormWrapper>

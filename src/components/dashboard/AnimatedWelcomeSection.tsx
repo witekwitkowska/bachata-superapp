@@ -41,7 +41,7 @@ export function AnimatedWelcomeSection({
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
-                        className="text-center space-y-4"
+                        className="text-center space-y-4 flex flex-col items-center"
                     >
                         <motion.h1
                             initial={{ scale: 0.8 }}
@@ -49,7 +49,7 @@ export function AnimatedWelcomeSection({
                             transition={{ duration: 0.5, delay: 0.3 }}
                             className="text-4xl font-bold text-gray-900 dark:text-gray-100"
                         >
-                            Welcome back, {userName}! 👋
+                            Welcome back, {userName}!
                         </motion.h1>
 
                         <motion.div

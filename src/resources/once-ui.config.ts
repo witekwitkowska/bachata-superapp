@@ -28,6 +28,13 @@ const routes: RoutesConfig = {
   "/dashboard/bachata-level": true,
   "/dashboard/teacher": true,
   "/dashboard/settings": true,
+  "/dashboard/admin": true,
+  "/dashboard/admin/socials": true,
+  "/dashboard/admin/festivals": true,
+  "/dashboard/admin/private-sessions": true,
+  "/dashboard/admin/workshops": true,
+  "/dashboard/admin/locations": true,
+  "/dashboard/admin/events": true,
 };
 
 const display: DisplayConfig = {

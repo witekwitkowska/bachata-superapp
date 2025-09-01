@@ -1,10 +1,8 @@
 "use client";
-
-import { useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Upload, X, Image as ImageIcon, Trash2, Crown, GripVertical } from "lucide-react";
-import { toast } from "sonner";
+import { Upload, X, Image as ImageIcon, Crown, GripVertical } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Import the compression function
 const compressImage = (
@@ -126,23 +124,21 @@ export function ImageUploadWithPreview({
     onImagesReorder,
     currentProfilePhoto = "",
 }: ImageUploadWithPreviewProps) {
+    const { toast } = useToast();
     const [uploadedFiles, setUploadedFiles] = useState<ImageData[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [draggedImage, setDraggedImage] = useState<string | null>(null);
     const [dragOverImage, setDragOverImage] = useState<string | null>(null);
 
-    // Create sortable images array combining existing and new images, avoiding duplicates
-
-    const existingImageUrls = new Set(existingImages);
-    const newImageUrls = uploadedFiles.map(f => f.url).filter(url => !existingImageUrls.has(url));
-    const allImages = [...existingImages, ...newImageUrls];
-
-    const sortableImages: SortableImage[] = allImages.map((url, index) => ({
-        id: `image-${index}`,
-        url,
-        isProfilePhoto: url === currentProfilePhoto,
-        order: index,
-    }));
+    // Create sortable images array using useMemo to prevent unnecessary re-renders
+    const sortableImages: SortableImage[] = useMemo(() => {
+        return existingImages.map((url, index) => ({
+            id: `image-${index}`,
+            url,
+            isProfilePhoto: url === currentProfilePhoto,
+            order: index,
+        }));
+    }, [existingImages, currentProfilePhoto]);
 
     const handleFileUpload = useCallback(async (files: FileList | File[]) => {
         if (disabled || isUploading) return;
@@ -150,8 +146,10 @@ export function ImageUploadWithPreview({
         const fileArray = Array.from(files);
         const validFiles = fileArray.filter(file => {
             if (!file.type.startsWith('image/')) {
-                toast.error("Invalid File", {
+                toast({
+                    title: "Invalid File",
                     description: `${file.name} is not an image file. Please select only image files.`,
+                    variant: "destructive",
                 });
                 return false;
             }
@@ -161,10 +159,12 @@ export function ImageUploadWithPreview({
         if (validFiles.length === 0) return;
 
         // Check if we're at the limit
-        const totalImages = existingImages.length + uploadedFiles.length + validFiles.length;
+        const totalImages = existingImages.length + validFiles.length;
         if (totalImages > maxImages) {
-            toast.error("Too Many Images", {
-                description: `Maximum ${maxImages} images allowed. You can upload ${maxImages - existingImages.length - uploadedFiles.length} more.`,
+            toast({
+                title: "Too Many Images",
+                description: `Maximum ${maxImages} images allowed. You can upload ${maxImages - existingImages.length} more.`,
+                variant: "destructive",
             });
             return;
         }
@@ -220,8 +220,6 @@ export function ImageUploadWithPreview({
 
                 const result = await response.json();
 
-                console.log(result, 'result');
-
                 if (!result.success) {
                     throw new Error(result.message || 'Upload failed');
                 }
@@ -231,89 +229,65 @@ export function ImageUploadWithPreview({
 
             const uploadedResults = await Promise.all(uploadPromises);
 
-            // Update local state
-            setUploadedFiles(prev => [...prev, ...uploadedResults]);
-
-
-            console.log(uploadedResults, 'uploadedResults', uploadedFiles);
-
-            // Update parent component
-            const allImageUrls = [...existingImages, ...uploadedFiles, ...uploadedResults].map(img =>
-                typeof img === 'string' ? img : img.url
-            );
-            onImagesChange(allImageUrls);
+            // Update parent component directly with new images
+            const newImages = [...existingImages, ...uploadedResults.map(img => img.url)];
+            onImagesChange(newImages);
 
             // Callback for newly uploaded images if provided
             if (onUploadedImagesChange) {
-                onUploadedImagesChange([...uploadedFiles, ...uploadedResults]);
+                onUploadedImagesChange(uploadedResults);
             }
 
-            toast.success("Upload Successful", {
+            toast({
+                title: "Upload Successful",
                 description: `Successfully uploaded ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}`,
             });
 
         } catch (error) {
             console.error('Upload error:', error);
-            toast.error("Upload Failed", {
+            toast({
+                title: "Upload Failed",
                 description: error instanceof Error ? error.message : "Failed to upload one or more images. Please try again.",
+                variant: "destructive",
             });
         } finally {
             setIsUploading(false);
             onEndUpload?.();
         }
-    }, [disabled, isUploading, existingImages, uploadedFiles, maxImages, onImagesChange, onUploadedImagesChange, toast]);
+    }, [disabled, isUploading, existingImages, maxImages, onImagesChange, onUploadedImagesChange, toast]);
 
-    const handleRemoveImage = useCallback((index: number, isExisting: boolean) => {
-        if (isExisting) {
-            // Remove from existing images
-            const newExistingImages = existingImages.filter((_, i) => i !== index);
-            const newImages = [...newExistingImages, ...uploadedFiles.map(img => img.url)];
-            onImagesChange(newImages);
+    const handleRemoveImage = useCallback((imageUrl: string, isExisting: boolean) => {
+        // Remove the image from existingImages and notify parent
+        const newImages = existingImages.filter(url => url !== imageUrl);
+        onImagesChange(newImages);
 
-            // Check if we're removing the profile photo
-            const removedImage = existingImages[index];
-            if (removedImage === currentProfilePhoto && onProfilePhotoChange) {
-                onProfilePhotoChange(null);
-            }
-        } else {
-            // Remove from newly uploaded images
-            const newUploadedFiles = uploadedFiles.filter((_, i) => i !== index);
-            setUploadedFiles(newUploadedFiles);
-            const newImages = [...existingImages, ...newUploadedFiles.map(img => img.url)];
-            onImagesChange(newImages);
-
-            // Check if we're removing the profile photo
-            const removedImage = uploadedFiles[index];
-            if (removedImage.url === currentProfilePhoto && onProfilePhotoChange) {
-                onProfilePhotoChange(null);
-            }
-        }
-    }, [existingImages, uploadedFiles, onImagesChange, currentProfilePhoto, onProfilePhotoChange]);
-
-    const handleRemoveAllNew = useCallback(() => {
-        setUploadedFiles([]);
-        onImagesChange(existingImages);
-
-        // Check if any of the removed images was the profile photo
-        const removedImages = uploadedFiles.map(f => f.url);
-        if (removedImages.includes(currentProfilePhoto) && onProfilePhotoChange) {
+        // Check if we're removing the profile photo
+        if (imageUrl === currentProfilePhoto && onProfilePhotoChange) {
             onProfilePhotoChange(null);
         }
-    }, [existingImages, onImagesChange, uploadedFiles, currentProfilePhoto, onProfilePhotoChange]);
+    }, [existingImages, onImagesChange, currentProfilePhoto, onProfilePhotoChange]);
+
+    const handleRemoveAllNew = useCallback(() => {
+        // Since we're not tracking uploaded files separately, this just resets to existing images
+        onImagesChange(existingImages);
+    }, [existingImages, onImagesChange]);
 
     const handleProfilePhotoSelect = useCallback((imageUrl: string) => {
         if (onProfilePhotoChange) {
             onProfilePhotoChange(imageUrl);
-            toast.success("Profile Photo Updated", {
+            toast({
+                title: "Profile Photo Updated",
                 description: "Profile photo has been set successfully!",
             });
         }
-    }, [onProfilePhotoChange]);
+    }, [onProfilePhotoChange, toast]);
 
     const handleDragStart = useCallback((e: React.DragEvent, imageUrl: string) => {
         if (!allowReordering) return;
+        console.log('Drag start:', imageUrl);
         setDraggedImage(imageUrl);
         e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', imageUrl);
     }, [allowReordering]);
 
     const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -326,6 +300,7 @@ export function ImageUploadWithPreview({
     const handleDragEnter = useCallback((e: React.DragEvent, imageUrl: string) => {
         if (!allowReordering) return;
         e.preventDefault();
+        console.log('Drag enter:', imageUrl);
         setDragOverImage(imageUrl);
     }, [allowReordering]);
 
@@ -336,21 +311,33 @@ export function ImageUploadWithPreview({
     }, [allowReordering]);
 
     const handleDrop = useCallback((e: React.DragEvent, targetImageUrl: string) => {
-        if (!allowReordering || !draggedImage || draggedImage === targetImageUrl) return;
+        if (!allowReordering || !draggedImage || draggedImage === targetImageUrl) {
+            console.log('Drop prevented:', { allowReordering, draggedImage, targetImageUrl });
+            return;
+        }
         e.preventDefault();
         e.stopPropagation();
 
-        const draggedIndex = allImages.indexOf(draggedImage);
-        const targetIndex = allImages.indexOf(targetImageUrl);
+        console.log('Drop:', { draggedImage, targetImageUrl });
 
-        if (draggedIndex === -1 || targetIndex === -1) return;
+        const draggedIndex = existingImages.indexOf(draggedImage);
+        const targetIndex = existingImages.indexOf(targetImageUrl);
+
+        console.log('Indices:', { draggedIndex, targetIndex });
+
+        if (draggedIndex === -1 || targetIndex === -1) {
+            console.log('Invalid indices');
+            return;
+        }
 
         // Create new array with reordered images
-        const newImages = [...allImages];
+        const newImages = [...existingImages];
         const [draggedItem] = newImages.splice(draggedIndex, 1);
         newImages.splice(targetIndex, 0, draggedItem);
 
-        // Update parent component
+        console.log('New images order:', newImages);
+
+        // Update parent component immediately
         onImagesChange(newImages);
 
         // Call reorder callback if provided
@@ -358,13 +345,16 @@ export function ImageUploadWithPreview({
             onImagesReorder(newImages);
         }
 
+        // Clear drag state
         setDraggedImage(null);
         setDragOverImage(null);
 
-        toast.success("Images Reordered", {
+        // Show success message
+        toast({
+            title: "Images Reordered",
             description: "Image order has been updated successfully!",
         });
-    }, [allowReordering, draggedImage, allImages, onImagesChange, onImagesReorder, toast]);
+    }, [allowReordering, draggedImage, existingImages, onImagesChange, onImagesReorder, toast]);
 
     const handleFileDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -374,7 +364,7 @@ export function ImageUploadWithPreview({
         }
     }, [disabled, isUploading, handleFileUpload]);
 
-    const totalImages = existingImages.length + uploadedFiles.length;
+    const totalImages = existingImages.length;
     const canUpload = totalImages < maxImages && !disabled;
 
     return (
@@ -398,7 +388,7 @@ export function ImageUploadWithPreview({
                     <div className={`
             flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed transition-all duration-200
             ${!canUpload || isUploading
-                            ? 'border-gray-300 bg-gray-50 dark:bg-gray-800 cursor-not-allowed'
+                            ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
                             : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
                         }
           `}>
@@ -408,20 +398,6 @@ export function ImageUploadWithPreview({
                         </span>
                     </div>
                 </label>
-
-                {uploadedFiles.length > 0 && (
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRemoveAllNew}
-                        disabled={isUploading}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Remove All New
-                    </Button>
-                )}
             </div>
 
             {/* Drag & Drop Area */}
@@ -430,7 +406,7 @@ export function ImageUploadWithPreview({
                     className={`
             p-6 border-2 border-dashed rounded-lg text-center transition-all duration-200
             ${isUploading
-                            ? 'border-gray-300 bg-gray-50 dark:bg-gray-800'
+                            ? 'border-gray-300 bg-gray-50'
                             : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
                         }
           `}
@@ -471,11 +447,15 @@ export function ImageUploadWithPreview({
                                 (Click crown icon to set as profile photo)
                             </span>
                         )}
+                        {allowReordering && (
+                            <span className="text-xs text-gray-500 ml-2">
+                                (Drag images to reorder)
+                            </span>
+                        )}
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         {sortableImages.map((image, index) => {
-                            const isExisting = existingImageUrls.has(image.url);
-                            const imageData = isExisting ? null : uploadedFiles.find(f => f.url === image.url);
+                            const isExisting = true; // All images are now existing since we're using only existingImages
 
                             return (
                                 <div
@@ -487,6 +467,10 @@ export function ImageUploadWithPreview({
                                     onDragEnter={(e) => handleDragEnter(e, image.url)}
                                     onDragLeave={handleDragLeave}
                                     onDrop={(e) => handleDrop(e, image.url)}
+                                    onDragEnd={() => {
+                                        setDraggedImage(null);
+                                        setDragOverImage(null);
+                                    }}
                                 >
                                     <div className={`
                                         aspect-square rounded-lg overflow-hidden border-2 transition-all duration-200
@@ -494,12 +478,14 @@ export function ImageUploadWithPreview({
                                             ? 'border-blue-500 ring-2 ring-blue-200'
                                             : dragOverImage === image.url
                                                 ? 'border-green-400 ring-2 ring-green-200'
-                                                : 'border-gray-200 dark:border-gray-700'
+                                                : draggedImage === image.url
+                                                    ? 'border-yellow-400 ring-2 ring-yellow-200 opacity-50'
+                                                    : 'border-gray-200 dark:border-gray-700'
                                         }
                                     `}>
                                         <img
                                             src={image.url}
-                                            alt={imageData?.title || `Image ${index + 1}`}
+                                            alt={`Image ${index + 1}`}
                                             className="w-full h-full object-cover"
                                             onError={(e) => {
                                                 e.currentTarget.style.display = 'none';
@@ -533,8 +519,8 @@ export function ImageUploadWithPreview({
                                     {(allowRemoveExisting || !isExisting) && (
                                         <button
                                             type="button"
-                                            onClick={() => handleRemoveImage(index, isExisting)}
-                                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => handleRemoveImage(image.url, isExisting)}
+                                            className="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center group-hover:opacity-100 transition-opacity"
                                             title="Remove image"
                                         >
                                             <X className="w-3 h-3" />
@@ -543,15 +529,8 @@ export function ImageUploadWithPreview({
 
                                     {/* Image Label */}
                                     <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 truncate">
-                                        {imageData?.title || `Image ${index + 1}`}
+                                        {`Image ${index + 1}`}
                                     </div>
-
-                                    {/* New Badge */}
-                                    {!isExisting && (
-                                        <div className="absolute top-2 left-2">
-                                            <Badge variant="secondary" className="text-xs">New</Badge>
-                                        </div>
-                                    )}
 
                                     {/* Drag Handle */}
                                     {allowReordering && (

@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, User, Settings, BookOpen, Home, GraduationCap, LogOut } from "lucide-react";
+import { Menu, X, User, Settings, BookOpen, Home, GraduationCap, LogOut, Calendar, MapPin, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMediaQuery } from "react-responsive";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 const navigation = [
     { id: "overview", label: "Overview", icon: Home, href: "/dashboard" },
@@ -15,12 +15,25 @@ const navigation = [
     { id: "bachata-level", label: "Bachata Level", icon: BookOpen, href: "/dashboard/bachata-level" },
     { id: "teacher", label: "Teacher Status", icon: GraduationCap, href: "/dashboard/teacher" },
     { id: "settings", label: "Settings", icon: Settings, href: "/dashboard/settings" },
+    // Admin pages (only shown to admin users)
+    { id: "admin-dashboard", label: "Admin Dashboard", icon: Shield, href: "/dashboard/admin", adminOnly: true },
+    { id: "admin-socials", label: "Manage Socials", icon: Calendar, href: "/dashboard/admin/socials", adminOnly: true },
+    { id: "admin-festivals", label: "Manage Festivals", icon: Calendar, href: "/dashboard/admin/festivals", adminOnly: true },
+    { id: "admin-sessions", label: "Private Sessions", icon: Users, href: "/dashboard/admin/private-sessions", adminOnly: true },
+    { id: "admin-workshops", label: "Manage Workshops", icon: GraduationCap, href: "/dashboard/admin/workshops", adminOnly: true },
+    { id: "admin-locations", label: "Manage Locations", icon: MapPin, href: "/dashboard/admin/locations", adminOnly: true },
+    { id: "admin-events", label: "All Events", icon: Calendar, href: "/dashboard/admin/events", adminOnly: true },
 ];
 
 export function AnimatedSidebar() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
     const isMobile = useMediaQuery({ query: "(max-width: 768px)" });
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.role === "admin";
+
+    // Filter navigation items based on user role
+    const filteredNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
 
     return (
         <>
@@ -61,7 +74,7 @@ export function AnimatedSidebar() {
 
                     {/* Navigation */}
                     <nav className="flex-1 p-4 space-y-2">
-                        {navigation.map((item) => {
+                        {filteredNavigation.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
 

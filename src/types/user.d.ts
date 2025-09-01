@@ -9,4 +9,5 @@ export interface UserProfile {
   gallery?: string[];
   banners?: string[];
   avatars?: string[];
+  isPublic?: boolean;
 }

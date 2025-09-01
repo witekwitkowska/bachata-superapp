@@ -12,6 +12,7 @@ import Selector from "@/components/common/selector";
 import { getZodRequiredFields } from "@/lib/utils";
 import { CompactInput } from "@/components/ui/compact-input";
 import { StatefulButton, StatefulButtonRef } from "../ui/stateful-button";
+import { Switch } from "@/components/ui/switch";
 
 type ConfigurableFormProps<T extends z.ZodType<any, any>> = {
     formSchema: T;
@@ -27,6 +28,7 @@ type ConfigurableFormProps<T extends z.ZodType<any, any>> = {
     className?: string;
     selectorList?: string[]
     multiSelectorList?: string[]
+    switchList?: string[]
     optionsMap?: any;
     endpointType?: string;
     isSubmitDisabled?: boolean;
@@ -57,6 +59,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     className,
     selectorList,
     multiSelectorList,
+    switchList,
     optionsMap,
     endpointType,
     isSubmitDisabled,
@@ -163,6 +166,19 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                                     form.trigger(fieldKey as Path<FormData>)
                                                 }}
                                                 selected={field.value}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                ) : switchList?.includes(fieldKey) ? (
+                                    <FormItem>
+                                        <FormLabel>
+                                            {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Switch
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
                                             />
                                         </FormControl>
                                         <FormMessage />
