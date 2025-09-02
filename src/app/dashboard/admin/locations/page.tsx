@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { LocationsClient } from "../locations-client";
-import { getCollection } from "@/lib/api/crud-generator";
+import { serverFetch } from "@/lib/server-fetch";
 import type { Location } from "@/types";
 
 export default async function LocationsPage() {
@@ -15,9 +15,9 @@ export default async function LocationsPage() {
         redirect("/dashboard");
     }
 
-    // Fetch locations on the server side
-    const collection = await getCollection("locations");
-    const locations = await collection.find({}).toArray();
+    // Fetch locations using serverFetch
+    const result = await serverFetch("/api/locations", "Failed to fetch locations");
+    const locations = result.success ? result.data : [];
 
-    return <LocationsClient initialLocations={locations as unknown as Location[]} />;
+    return <LocationsClient initialLocations={locations as Location[]} />;
 }

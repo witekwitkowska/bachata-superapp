@@ -12,14 +12,14 @@ const config = {
   beforeCreate: async (data: LocationInput) => {
     return {
       ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   },
   beforeUpdate: async (data: Partial<LocationInput>) => {
     return {
       ...data,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
   },
 };

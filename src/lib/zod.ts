@@ -27,11 +27,10 @@ export const locationSchema = z.object({
   country: z.string().min(1, "Country is required").default(""),
   coordinates: z
     .object({
-      lat: z.number().default(0),
-      lng: z.number().default(0),
+      lat: z.number(),
+      lng: z.number(),
     })
-    .optional()
-    .default({ lat: 0, lng: 0 }),
+    .optional(),
 });
 
 // Base Event Schema

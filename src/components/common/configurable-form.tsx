@@ -37,6 +37,7 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     containerClassName?: string;
     exclusionList?: string[];
     onError?: (error: unknown) => void;
+    onFormSuccess?: () => void; // New prop for parent callback
 };
 
 export type ConfigurableFormRef<T extends z.ZodObject<any>> = {
@@ -67,7 +68,8 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     passwordList,
     dateList,
     containerClassName,
-    exclusionList
+    exclusionList,
+    onFormSuccess
 }: ConfigurableFormProps<T>, ref: React.Ref<ConfigurableFormRef<T>>) {
     // Define the form data type
     type FormData = z.infer<T>;
@@ -94,6 +96,8 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         const switchFields: string[] = [];
         const dateFields: string[] = [];
         const arrayFields: string[] = [];
+        const numericFields: string[] = [];
+        const objectFields: string[] = [];
 
         for (const [fieldName, fieldSchema] of Object.entries(formSchema.shape)) {
             // Skip excluded fields
@@ -115,8 +119,6 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                 currentSchema = currentSchema._def?.innerType;
             }
 
-
-
             if (actualType === 'enum' || actualType === 'union') {
                 selectorFields.push(fieldName);
             } else if (actualType === 'boolean') {
@@ -125,6 +127,10 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                 dateFields.push(fieldName);
             } else if (actualType === 'array') {
                 arrayFields.push(fieldName);
+            } else if (actualType === 'number' || actualType === 'int' || actualType === 'float') {
+                numericFields.push(fieldName);
+            } else if (actualType === 'object') {
+                objectFields.push(fieldName);
             } else if (fieldName.endsWith('Id')) {
                 // Auto-detect ID fields as selectors (e.g., teacherId, studentId, locationId)
                 selectorFields.push(fieldName);
@@ -135,7 +141,9 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
             selectorFields,
             switchFields,
             dateFields,
-            arrayFields
+            arrayFields,
+            numericFields,
+            objectFields
         };
     }, [formSchema, exclusionList]);
 
@@ -144,19 +152,22 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     const finalSwitchList = switchList && switchList.length > 0 ? switchList : autoDetectedLists.switchFields;
     const finalDateList = dateList && dateList.length > 0 ? dateList : autoDetectedLists.dateFields;
     const finalArrayList = multiSelectorList && multiSelectorList.length > 0 ? multiSelectorList : autoDetectedLists.arrayFields;
+    const finalNumericList = autoDetectedLists.numericFields;
 
     // Debug logging to see what's being detected
-    console.log('Schema analysis:', {
-        schemaShape: Object.keys(formSchema.shape),
-        exclusionList,
-        autoDetectedLists,
-        finalLists: {
-            selector: finalSelectorList,
-            switch: finalSwitchList,
-            date: finalDateList,
-            array: finalArrayList
-        }
-    });
+    // console.log('Schema analysis:', {
+    //     schemaShape: Object.keys(formSchema.shape),
+    //     exclusionList,
+    //     autoDetectedLists,
+    //     finalLists: {
+    //         selector: finalSelectorList,
+    //         switch: finalSwitchList,
+    //         date: finalDateList,
+    //         array: finalArrayList,
+    //         numeric: finalNumericList,
+    //         object: autoDetectedLists.objectFields
+    //     }
+    // });
 
     const handleFinish = useCallback((success: boolean) => {
         if (buttonRef.current) {
@@ -164,6 +175,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         }
     }, []);
 
+    console.log(endpoint, 'endpoint');
     const { onPost, onPatch, loading } = fetchWithToast(
         endpoint,
         entityName,
@@ -171,7 +183,12 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         onSuccess,
         false,
         undefined,
-        handleFinish
+        (success: boolean) => {
+            handleFinish(success);
+            if (success && onFormSuccess) {
+                onFormSuccess();
+            }
+        }
     );
 
     const { isValid, isDirty, isSubmitting } = form.formState;
@@ -197,7 +214,10 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                         }
                     })}
                 >
-                    {Object.keys(defaultValues).filter(fieldKey => !exclusionList?.includes(fieldKey)).map((fieldKey) => (
+                    {Object.keys(defaultValues).filter(fieldKey =>
+                        !exclusionList?.includes(fieldKey) &&
+                        !autoDetectedLists.objectFields.includes(fieldKey)
+                    ).map((fieldKey) => (
                         <FormField
                             key={fieldKey}
                             control={form.control}
@@ -251,6 +271,29 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                             <Switch
                                                 checked={field.value as boolean}
                                                 onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                ) : finalNumericList?.includes(fieldKey) ? (
+                                    <FormItem>
+                                        <FormControl>
+                                            <CompactInput
+                                                label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                {...field}
+                                                type="number"
+                                                step="any"
+                                                placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                value={field.value as string | number}
+                                                onChange={(e) => {
+                                                    // Clear field error when user starts typing
+                                                    if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                        form.clearErrors(fieldKey as Path<FormData>);
+                                                    }
+                                                    // Convert string to number for numeric fields
+                                                    const numValue = e.target.value === '' ? '' : Number(e.target.value);
+                                                    field.onChange(numValue);
+                                                }}
                                             />
                                         </FormControl>
                                         <FormMessage />

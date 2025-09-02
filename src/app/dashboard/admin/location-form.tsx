@@ -13,9 +13,10 @@ interface LocationFormProps {
     initialData?: Location | null;
     onSubmit: (data: Record<string, unknown>) => void;
     onCancel: () => void;
+    onFormSuccess?: () => void; // New prop for table refresh
 }
 
-export function LocationForm({ initialData, onSubmit, onCancel }: LocationFormProps) {
+export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }: LocationFormProps) {
     const getDisplayNames = () => {
         // Extract display names from schema shape
         const schemaFields = getSchemaFields(locationSchema);
@@ -73,8 +74,9 @@ export function LocationForm({ initialData, onSubmit, onCancel }: LocationFormPr
         <div className="space-y-6">
             <ConfigurableForm
                 formSchema={locationSchema}
-                endpoint=""
+                endpoint="/locations"
                 entityName="location"
+                endpointType={initialData ? "PATCH" : "POST"}
                 displayNames={getDisplayNames()}
                 defaultValues={getDefaultValues()}
                 buttonTitle={initialData ? "Update Location" : "Create Location"}
@@ -82,6 +84,7 @@ export function LocationForm({ initialData, onSubmit, onCancel }: LocationFormPr
                 switchList={undefined}
                 loadingTitle="Saving..."
                 className="space-y-4"
+                onFormSuccess={onFormSuccess}
             />
 
             <div className="flex justify-end space-x-2">

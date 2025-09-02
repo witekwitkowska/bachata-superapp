@@ -140,7 +140,10 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
         await config.afterCreate(data, session);
       }
 
-      return Response.json({ success: true, data: { id: result.insertedId } });
+      return Response.json({
+        success: true,
+        data: { id: result.insertedId },
+      });
     } catch (error) {
       return Response.json(
         { success: false, error: (error as Error).message },
