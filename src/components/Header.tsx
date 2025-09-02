@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { User, LogIn, LogOut } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Fade, Flex, Line, Row, ToggleButton } from "@once-ui-system/core";
 
@@ -50,7 +51,7 @@ const AuthControls = () => {
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg">
-        <div className="w-4 h-4 border-2 border-neutral-800 dark:border-neutral-200 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-4 h-4 border-2 border-neutral-800 dark:border-neutral-200 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -59,6 +60,7 @@ const AuthControls = () => {
     return (
       <div className="flex gap-4 items-center">
         <button
+          type="button"
           onClick={() => signOut({ callbackUrl: "/" })}
           className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
           title="Sign Out"
@@ -87,8 +89,154 @@ const AuthControls = () => {
   );
 };
 
+const distance = 15;
+
+// Enhanced ToggleButton with hover animation using motion values
+const AnimatedToggleButton = ({
+  prefixIcon,
+  href,
+  label,
+  selected,
+  itemKey,
+  onHover,
+  onLeave
+}: {
+  prefixIcon: string;
+  href: string;
+  label?: string;
+  selected: boolean;
+  itemKey: string;
+  onHover: (itemKey: string, element: HTMLElement) => void;
+  onLeave: () => void;
+}) => {
+
+  const [textHoverState, setTextHoverState] = useState({
+    y: distance,
+    opacity: 0,
+    rotateX: 0
+  });
+
+  const buttonRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseEnter = () => {
+    console.log("handleMouseEnter", itemKey);
+    setTextHoverState({
+      y: 0,
+      opacity: 1,
+      rotateX: 90
+    });
+    if (buttonRef.current) {
+      onHover(itemKey, buttonRef.current);
+    }
+  };
+
+
+
+  const handleMouseLeave = () => {
+    console.log("handleMouseLeave", itemKey);
+    setTextHoverState({
+      y: distance,
+      opacity: 0,
+      rotateX: 0
+    });
+    onLeave();
+  };
+
+  return (
+    <div
+      ref={buttonRef}
+      className="relative h-auto overflow-hidden"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <motion.div
+        style={{
+          position: "absolute",
+          transformPerspective: 1000,
+          top: 0,
+          left: 0,
+          height: "auto",
+          zIndex: 1,
+        }}
+        animate={{
+          y: textHoverState.y,
+          opacity: textHoverState.opacity,
+          rotateX: 0
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 40
+        }}
+      >
+        <ToggleButton
+          prefixIcon={prefixIcon}
+          href={href}
+          label={label}
+          selected={selected}
+        />
+      </motion.div>
+      <motion.div
+        style={{
+          height: "auto",
+          zIndex: 1,
+        }}
+        animate={{
+          y: textHoverState.y - distance,
+          opacity: 1 - textHoverState.opacity,
+          rotateX: textHoverState.rotateX
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 40
+        }}
+      >
+        <ToggleButton
+          prefixIcon={prefixIcon}
+          href={href}
+          label={label}
+          selected={selected}
+        />
+      </motion.div>
+    </div>
+  );
+};
+
 export const Header = () => {
   const pathname = usePathname() ?? "";
+  const navRef = useRef<HTMLDivElement>(null);
+
+  // Use state for animation values
+  const [hoverState, setHoverState] = useState({
+    x: 0,
+    width: 0,
+    opacity: 0
+  });
+
+  const handleHover = (itemKey: string, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    const navRect = navRef.current?.getBoundingClientRect();
+
+    if (navRect) {
+      const x = rect.left - navRect.left;
+      const width = rect.width;
+      // Update state to trigger animation
+      setHoverState({
+        x,
+        width,
+        opacity: 1
+      });
+    }
+  };
+
+  const handleLeave = () => {
+    // Fade out smoothly
+    // setHoverState(prev => ({
+    //   ...prev,
+    //   opacity: 0
+    // }));
+  };
 
   return (
     <>
@@ -129,27 +277,56 @@ export const Header = () => {
             padding="4"
             horizontal="center"
             zIndex={1}
+            ref={navRef}
+            className="relative"
           >
+            {/* Animated hover background using state */}
+            <motion.div
+              className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-xl h-[calc(100%-8px)] top-4"
+              animate={hoverState}
+              style={{
+                zIndex: -1,
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30
+              }}
+            />
+
             <Row gap="4" vertical="center" textVariant="body-default-s" suppressHydrationWarning>
               {routes["/"] && (
-                <ToggleButton prefixIcon="home" href="/" selected={pathname === "/"} />
+                <AnimatedToggleButton
+                  prefixIcon="home"
+                  href="/"
+                  selected={pathname === "/"}
+                  itemKey="home"
+                  onHover={handleHover}
+                  onLeave={handleLeave}
+                />
               )}
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
               {routes["/about"] && (
                 <>
                   <Row s={{ hide: true }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="person"
                       href="/about"
                       label={about.label}
                       selected={pathname === "/about"}
+                      itemKey="about"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                   <Row hide s={{ hide: false }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="person"
                       href="/about"
                       selected={pathname === "/about"}
+                      itemKey="about"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                 </>
@@ -157,18 +334,24 @@ export const Header = () => {
               {routes["/work"] && (
                 <>
                   <Row s={{ hide: true }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="grid"
                       href="/work"
                       label={work.label}
                       selected={pathname.startsWith("/work")}
+                      itemKey="work"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                   <Row hide s={{ hide: false }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="grid"
                       href="/work"
                       selected={pathname.startsWith("/work")}
+                      itemKey="work"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                 </>
@@ -176,18 +359,24 @@ export const Header = () => {
               {routes["/blog"] && (
                 <>
                   <Row s={{ hide: true }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="book"
                       href="/blog"
                       label={blog.label}
                       selected={pathname.startsWith("/blog")}
+                      itemKey="blog"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                   <Row hide s={{ hide: false }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="book"
                       href="/blog"
                       selected={pathname.startsWith("/blog")}
+                      itemKey="blog"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                 </>
@@ -195,18 +384,24 @@ export const Header = () => {
               {routes["/gallery"] && (
                 <>
                   <Row s={{ hide: true }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="gallery"
                       href="/gallery"
                       label={gallery.label}
                       selected={pathname.startsWith("/gallery")}
+                      itemKey="gallery"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                   <Row hide s={{ hide: false }}>
-                    <ToggleButton
+                    <AnimatedToggleButton
                       prefixIcon="gallery"
                       href="/gallery"
                       selected={pathname.startsWith("/gallery")}
+                      itemKey="gallery"
+                      onHover={handleHover}
+                      onLeave={handleLeave}
                     />
                   </Row>
                 </>
