@@ -1,5 +1,5 @@
-"use client";;
-import { useState, useMemo, useEffect } from "react";
+"use client";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { serverFetch } from "@/lib/server-fetch";
 
 // Types for our data
 interface SearchResult {
@@ -118,7 +119,7 @@ export default function Home() {
   };
 
   // Fetch data from your CRUD endpoints
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -131,60 +132,54 @@ export default function Home() {
           ? ["festival", "social", "workshop", "private-session"]
           : [activeTab.replace("-s", "")];
 
-        const eventsResponse = await fetch(`/api/events?type=${eventTypes.join(",")}&published=true&limit=50`);
-        if (eventsResponse.ok) {
-          const eventsData = await eventsResponse.json();
-          if (eventsData.success && eventsData.data) {
-            const events = eventsData.data.map((event: Record<string, unknown>) => ({
-              id: (event._id || event.id) as string,
-              type: event.type as string,
-              title: event.title as string,
-              description: event.description as string,
-              location: (event.location as Record<string, unknown>)?.name as string || "Unknown Location",
-              city: (event.location as Record<string, unknown>)?.city as string,
-              country: (event.location as Record<string, unknown>)?.country as string,
-              date: event.time as string,
-              rating: (event.rating as number) || 4.5,
-              attendees: (event.maxAttendees as number) || 0,
-              image: (event.image as string) || "/images/avatar.jpg",
-              teacherName: (event.teacher as Record<string, unknown>)?.name as string,
-              teacherImage: (event.teacher as Record<string, unknown>)?.image as string,
-              isPaid: event.isPaid as boolean,
-              price: event.price as number,
-              currency: event.currency as string,
-              skillLevel: event.skillLevel as string,
-              focusAreas: event.focusAreas as string[],
-              createdAt: event.createdAt as string
-            }));
-            allResults.push(...events);
-          }
+        const eventsData = await serverFetch(`/api/events?type=${eventTypes.join(",")}&published=true&limit=50`, "Failed to fetch events");
+        if (eventsData.success && eventsData.data) {
+          const events = eventsData.data.map((event: Record<string, unknown>) => ({
+            id: (event._id || event.id) as string,
+            type: event.type as string,
+            title: event.title as string,
+            description: event.description as string,
+            location: (event.location as Record<string, unknown>)?.name as string || "Unknown Location",
+            city: (event.location as Record<string, unknown>)?.city as string,
+            country: (event.location as Record<string, unknown>)?.country as string,
+            date: event.time as string,
+            rating: (event.rating as number) || 4.5,
+            attendees: (event.maxAttendees as number) || 0,
+            image: (event.image as string) || "/images/avatar.jpg",
+            teacherName: (event.teacher as Record<string, unknown>)?.name as string,
+            teacherImage: (event.teacher as Record<string, unknown>)?.image as string,
+            isPaid: event.isPaid as boolean,
+            price: event.price as number,
+            currency: event.currency as string,
+            skillLevel: event.skillLevel as string,
+            focusAreas: event.focusAreas as string[],
+            createdAt: event.createdAt as string
+          }));
+          allResults.push(...events);
         }
       }
 
       // Fetch artists (users with teacher role)
       if (activeTab === "all" || activeTab === "artists") {
-        const artistsResponse = await fetch("/api/users?role=teacher&published=true&limit=50");
-        if (artistsResponse.ok) {
-          const artistsData = await artistsResponse.json();
-          if (artistsData.success && artistsData.data) {
-            const artists = artistsData.data.map((user: Record<string, unknown>) => ({
-              id: (user._id || user.id) as string,
-              type: "artist",
-              name: user.name as string,
-              specialty: user.specialty as string,
-              bio: user.bio as string,
-              location: (user.location as string) || "Unknown Location",
-              city: user.city as string,
-              country: user.country as string,
-              rating: (user.rating as number) || 4.5,
-              students: (user.studentsCount as number) || 0,
-              image: (user.image as string) || "/images/avatar.jpg",
-              experience: user.experience as string,
-              styles: user.styles as string[],
-              createdAt: user.createdAt as string
-            }));
-            allResults.push(...artists);
-          }
+        const artistsData = await serverFetch("/api/users?role=teacher&published=true&limit=50", "Failed to fetch artists");
+        if (artistsData.success && artistsData.data) {
+          const artists = artistsData.data.map((user: Record<string, unknown>) => ({
+            id: (user._id || user.id) as string,
+            type: "artist",
+            name: user.name as string,
+            specialty: user.specialty as string,
+            bio: user.bio as string,
+            location: (user.location as string) || "Unknown Location",
+            city: user.city as string,
+            country: user.country as string,
+            rating: (user.rating as number) || 4.5,
+            students: (user.studentsCount as number) || 0,
+            image: (user.image as string) || "/images/avatar.jpg",
+            experience: user.experience as string,
+            styles: user.styles as string[],
+            createdAt: user.createdAt as string
+          }));
+          allResults.push(...artists);
         }
       }
 
@@ -195,12 +190,12 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
 
   // Fetch data when tab changes
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [fetchData]);
 
   const filteredResults = useMemo(() => {
     let filtered = [...results];
