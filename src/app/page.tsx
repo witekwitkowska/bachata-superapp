@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { serverFetch } from "@/lib/server-fetch";
+import { handleFetch } from "@/lib/fetch";
 
 // Types for our data
 interface SearchResult {
@@ -132,7 +132,7 @@ export default function Home() {
           ? ["festival", "social", "workshop", "private-session"]
           : [activeTab.replace("-s", "")];
 
-        const eventsData = await serverFetch(`/api/events?type=${eventTypes.join(",")}&published=true&limit=50`, "Failed to fetch events");
+        const eventsData = await handleFetch(`/api/events?type=${eventTypes.join(",")}&published=true&limit=50`, "Failed to fetch events");
         if (eventsData.success && eventsData.data) {
           const events = eventsData.data.map((event: Record<string, unknown>) => ({
             id: (event._id || event.id) as string,
@@ -161,7 +161,7 @@ export default function Home() {
 
       // Fetch artists (users with teacher role)
       if (activeTab === "all" || activeTab === "artists") {
-        const artistsData = await serverFetch("/api/users?role=teacher&published=true&limit=50", "Failed to fetch artists");
+        const artistsData = await handleFetch("/api/users?role=teacher&published=true&limit=50", "Failed to fetch artists");
         if (artistsData.success && artistsData.data) {
           const artists = artistsData.data.map((user: Record<string, unknown>) => ({
             id: (user._id || user.id) as string,

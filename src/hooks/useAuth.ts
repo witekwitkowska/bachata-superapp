@@ -64,6 +64,7 @@ export function useAuth() {
     email: string;
     password: string;
     confirmPassword: string;
+    recaptchaToken: string;
   }) => {
     setIsLoading(true);
     try {

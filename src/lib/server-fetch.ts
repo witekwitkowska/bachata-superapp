@@ -12,7 +12,6 @@ export async function serverFetch(url: string, errorMessage: string) {
       ? url
       : `${protocol}://${host}${url}`;
 
-    console.log(fullUrl, "is fullUrl in serverFetch");
     const response = await fetch(fullUrl, {
       headers: {
         "Content-Type": "application/json",

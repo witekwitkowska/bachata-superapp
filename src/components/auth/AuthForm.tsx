@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { LoadingButton } from "@/components/ui/loading-button"
+import ReCAPTCHA from "react-google-recaptcha"
 
 interface AuthFormProps {
     mode: "login" | "register"
@@ -25,6 +26,8 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
     })
     const [showPassword, setShowPassword] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [recaptchaToken, setRecaptchaToken] = useState<string>("")
+    const recaptchaRef = useRef<ReCAPTCHA>(null)
 
     const { login, register, isLoading } = useAuth()
 
@@ -33,6 +36,13 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
         // Clear error when user starts typing
         if (errors[field]) {
             setErrors(prev => ({ ...prev, [field]: "" }))
+        }
+    }
+
+    const handleRecaptchaChange = (token: string | null) => {
+        setRecaptchaToken(token || "")
+        if (errors.recaptchaToken) {
+            setErrors(prev => ({ ...prev, recaptchaToken: "" }))
         }
     }
 
@@ -56,20 +66,42 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
                     return
                 }
 
+                // reCAPTCHA validation
+                if (!recaptchaToken) {
+                    setErrors({ recaptchaToken: "Please complete the reCAPTCHA verification" })
+                    return
+                }
+
                 const result = await register({
                     name: formData.name,
                     email: formData.email,
                     password: formData.password,
-                    confirmPassword: formData.confirmPassword
+                    confirmPassword: formData.confirmPassword,
+                    recaptchaToken: recaptchaToken
                 })
                 if (result?.success) {
+                    // Reset reCAPTCHA on success
+                    if (recaptchaRef.current) {
+                        recaptchaRef.current.reset();
+                    }
+                    setRecaptchaToken("")
                     onSuccess?.()
                 } else {
+                    // Reset reCAPTCHA on error
+                    if (recaptchaRef.current) {
+                        recaptchaRef.current.reset();
+                    }
+                    setRecaptchaToken("")
                     setErrors({ general: result?.error || "Registration failed" })
                     onError?.(result?.error || "Registration failed")
                 }
             }
         } catch (error) {
+            // Reset reCAPTCHA on error
+            if (recaptchaRef.current) {
+                recaptchaRef.current.reset();
+            }
+            setRecaptchaToken("")
             const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred"
             setErrors({ general: errorMessage })
             onError?.(errorMessage)
@@ -244,6 +276,29 @@ export function AuthForm({ mode, onSuccess, onError }: AuthFormProps) {
                                         className="text-sm text-red-600 mt-1 dark:text-red-400"
                                     >
                                         {errors.confirmPassword}
+                                    </motion.p>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {!isLogin && (
+                            <motion.div variants={itemVariants}>
+                                <div className="flex justify-center">
+                                    <ReCAPTCHA
+                                        ref={recaptchaRef}
+                                        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                                        onChange={handleRecaptchaChange}
+                                        theme="light"
+                                        size="normal"
+                                    />
+                                </div>
+                                {errors.recaptchaToken && (
+                                    <motion.p
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-sm text-red-600 mt-1 dark:text-red-400 text-center"
+                                    >
+                                        {errors.recaptchaToken}
                                     </motion.p>
                                 )}
                             </motion.div>
