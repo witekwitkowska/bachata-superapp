@@ -9,6 +9,7 @@ import { LocationForm } from "./location-form";
 import { useTableRefresh } from "@/hooks/use-table-refresh";
 import type { Location } from "@/types";
 import type { ColumnDef } from "@tanstack/react-table";
+import { handleDelete } from "@/lib/fetch";
 
 interface LocationsClientProps {
     initialLocations: Location[];
@@ -26,17 +27,16 @@ export function LocationsClient({ initialLocations }: LocationsClientProps) {
         refreshDelay: 100,
     });
 
-    const handleDelete = async (id: string) => {
+    const handleDeletion = async (id: string) => {
         if (!confirm("Are you sure you want to delete this location?")) return;
 
         try {
-            const response = await fetch(`/api/locations/${id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
+            const response = await handleDelete(`/api/locations/${id}`)
+            if (response?.success) {
                 // Schedule table refresh
                 scheduleRefresh();
             }
+
         } catch (error) {
             console.error("Error deleting location:", error);
         }
@@ -108,7 +108,7 @@ export function LocationsClient({ initialLocations }: LocationsClientProps) {
                         <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDelete(location.id)}
+                            onClick={() => handleDeletion(location.id)}
                         >
                             Delete
                         </Button>

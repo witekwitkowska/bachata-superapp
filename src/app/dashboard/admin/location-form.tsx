@@ -81,7 +81,6 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
                 defaultValues={getDefaultValues()}
                 buttonTitle={initialData ? "Update Location" : "Create Location"}
                 headerTitle={`${initialData ? "Edit" : "Add New"} Location`}
-                switchList={undefined}
                 loadingTitle="Saving..."
                 className="space-y-4"
                 onFormSuccess={onFormSuccess}

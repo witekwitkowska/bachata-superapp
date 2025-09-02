@@ -37,7 +37,6 @@ export const locationSchema = z.object({
 export const baseEventSchema = z.object({
   title: z.string().min(1, "Title is required").default(""),
   description: z.string().min(1, "Description is required").default(""),
-  time: z.date().default(() => new Date()),
   type: z.enum(["social", "festival", "private-session", "workshop"]),
   isPaid: z.boolean().default(false),
   locationId: z.string().min(1, "Location is required").default(""),
@@ -51,6 +50,24 @@ export const baseEventSchema = z.object({
 export const socialEventSchema = baseEventSchema.extend({
   type: z.literal("social"),
   organizerId: z.string().min(1, "Organizer is required").default(""),
+  weeklyDays: z
+    .array(
+      z.enum([
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+      ])
+    )
+    .default([])
+    .optional(),
+  startDate: z.date().default(() => new Date()),
+  endDate: z
+    .date()
+    .default(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)), // 1 year from now
   musicStyle: z.string().default("").optional(),
   dressCode: z.string().default("").optional(),
   includesFood: z.boolean().default(false).optional(),

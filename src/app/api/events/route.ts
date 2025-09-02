@@ -9,17 +9,18 @@ const config = {
   schema: eventSchema,
   auth: true,
   roles: ["admin", "visitor"],
+  projection: {} as Record<string, 0 | 1>, // This will enable the transform function
   beforeCreate: async (data: EventInput) => {
     return {
       ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   },
   beforeUpdate: async (data: Partial<EventInput>) => {
     return {
       ...data,
-      updatedAt: new Date(),
+      updatedAt: new Date().toISOString(),
     };
   },
 };

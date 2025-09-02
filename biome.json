@@ -9,13 +9,13 @@
     "ignoreUnknown": false
   },
   "formatter": {
-    "enabled": true,
+    "enabled": false,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100
   },
   "linter": {
-    "enabled": true,
+    "enabled": false,
     "rules": { "recommended": true }
   },
   "javascript": {

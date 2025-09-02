@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { AllEventsClient } from "../all-events-client";
-import { getCollection } from "@/lib/api/crud-generator";
 import type { Event } from "@/types";
+import { serverFetch } from "@/lib/server-fetch";
 
 export default async function AllEventsPage() {
     const session = await auth();
@@ -15,9 +15,8 @@ export default async function AllEventsPage() {
         redirect("/dashboard");
     }
 
-    // Fetch all events on the server side
-    const collection = await getCollection("events");
-    const events = await collection.find({}).toArray();
+    const result = await serverFetch("/api/events", "Failed to fetch events");
+    const events = result.success ? result.data : [];
 
-    return <AllEventsClient initialEvents={events as unknown as Event[]} />;
+    return <AllEventsClient initialEvents={events as Event[]} />;
 }

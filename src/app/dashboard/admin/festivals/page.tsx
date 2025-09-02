@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { EventAdminPage } from "../event-admin-page";
-import { getCollection } from "@/lib/api/crud-generator";
 import type { Event } from "@/types";
+import { serverFetch } from "@/lib/server-fetch";
 
 export default async function FestivalsPage() {
     const session = await auth();
@@ -16,15 +16,15 @@ export default async function FestivalsPage() {
     }
 
     // Fetch events on the server side
-    const collection = await getCollection("events");
-    const events = await collection.find({ type: "festival" }).toArray();
+    const result = await serverFetch("/api/events?type=festival", "Failed to fetch festival events");
+    const events = result.success ? result.data : [];
 
     return (
         <EventAdminPage
             eventType="festival"
             title="Festivals"
             description="Manage dance festivals"
-            initialEvents={events as unknown as Event[]}
+            initialEvents={events as Event[]}
         />
     );
 }

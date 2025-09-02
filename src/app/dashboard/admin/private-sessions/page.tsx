@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { EventAdminPage } from "../event-admin-page";
-import { getCollection } from "@/lib/api/crud-generator";
 import type { Event } from "@/types";
+import { serverFetch } from "@/lib/server-fetch";
 
 export default async function PrivateSessionsPage() {
     const session = await auth();
@@ -16,15 +16,15 @@ export default async function PrivateSessionsPage() {
     }
 
     // Fetch events on the server side
-    const collection = await getCollection("events");
-    const events = await collection.find({ type: "private-session" }).toArray();
+    const result = await serverFetch("/api/events?type=private-session", "Failed to fetch private session events");
+    const events = result.success ? result.data : [];
 
     return (
         <EventAdminPage
             eventType="private-session"
             title="Private Sessions"
             description="Manage private dance lessons"
-            initialEvents={events as unknown as Event[]}
+            initialEvents={events as Event[]}
         />
     );
 }

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { EventForm } from "./event-form";
 import type { Event } from "@/types";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useTableRefresh } from "@/hooks/use-table-refresh";
 
 interface EventAdminPageProps {
     eventType: string;
@@ -21,6 +22,12 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
     const [events, setEvents] = useState<Event[]>(initialEvents);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
+    const { scheduleRefresh } = useTableRefresh<Event>({
+        endpoint: "/api/events",
+        onRefresh: setEvents,
+        refreshDelay: 100,
+    });
 
     const fetchEvents = async () => {
         try {
@@ -35,7 +42,7 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDeletion = async (id: string) => {
         if (!confirm("Are you sure you want to delete this event?")) return;
 
         try {
@@ -43,7 +50,8 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
                 method: "DELETE",
             });
             if (response.ok) {
-                fetchEvents();
+                // fetchEvents();
+                scheduleRefresh();
             }
         } catch (error) {
             console.error("Error deleting event:", error);
@@ -77,7 +85,8 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
             if (response.ok) {
                 setIsDialogOpen(false);
                 setEditingEvent(null);
-                fetchEvents();
+                // fetchEvents();
+                scheduleRefresh();
             }
         } catch (error) {
             console.error("Error saving event:", error);
@@ -90,10 +99,25 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
             header: "Title",
         },
         {
-            accessorKey: "time",
-            header: "Date & Time",
+            accessorKey: "locationId",
+            header: "Location",
             cell: ({ row }) => {
-                const date = new Date(row.getValue("time"));
+                return row.getValue("locationId");
+            },
+        },
+        {
+            accessorKey: "startDate",
+            header: "Start Date",
+            cell: ({ row }) => {
+                const date = new Date(row.getValue("startDate"));
+                return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+            },
+        },
+        {
+            accessorKey: "endDate",
+            header: "End Date",
+            cell: ({ row }) => {
+                const date = new Date(row.getValue("endDate"));
                 return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
             },
         },
@@ -138,7 +162,7 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
                         <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDelete(event.id)}
+                            onClick={() => handleDeletion(event.id)}
                         >
                             Delete
                         </Button>
@@ -172,6 +196,9 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
                             onCancel={() => {
                                 setIsDialogOpen(false);
                                 setEditingEvent(null);
+                            }}
+                            onFormSuccess={() => {
+                                scheduleRefresh();
                             }}
                         />
                     </DialogContent>

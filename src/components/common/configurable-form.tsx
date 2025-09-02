@@ -13,6 +13,8 @@ import { getZodRequiredFields } from "@/lib/utils";
 import { CompactInput } from "@/components/ui/compact-input";
 import { StatefulButton, StatefulButtonRef } from "../ui/stateful-button";
 import { Switch } from "@/components/ui/switch";
+import { DateTimePicker } from "./date-time-picker";
+import { DatePicker } from "./date-picker";
 
 type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     formSchema: T;
@@ -34,6 +36,9 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     isSubmitDisabled?: boolean;
     passwordList?: string[]
     dateList?: string[]
+    dateTimeList?: string[] // Fields that need full date + time
+    dateOnlyList?: string[] // Fields that need date only (no time)
+    weekdayList?: string[] // Fields that need weekday selection
     containerClassName?: string;
     exclusionList?: string[];
     onError?: (error: unknown) => void;
@@ -67,12 +72,22 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     isSubmitDisabled,
     passwordList,
     dateList,
+    dateTimeList,
+    dateOnlyList,
+    weekdayList,
     containerClassName,
     exclusionList,
     onFormSuccess
 }: ConfigurableFormProps<T>, ref: React.Ref<ConfigurableFormRef<T>>) {
     // Define the form data type
     type FormData = z.infer<T>;
+
+    // Basic debugging
+    console.log('ConfigurableForm rendering with:', {
+        entityName,
+        optionsMap,
+        defaultValues: Object.keys(defaultValues)
+    });
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema) as any,
@@ -89,6 +104,79 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     }));
 
     const requiredList = useMemo(() => getZodRequiredFields(formSchema), [formSchema])
+
+    // Utility function to extract options from Zod schema
+    const extractOptionsFromSchema = useCallback((fieldName: string) => {
+        let currentSchema = formSchema.shape[fieldName];
+        if (!currentSchema) return [];
+
+        // Navigate through ZodDefault and ZodOptional wrappers
+        while (currentSchema.constructor.name === 'ZodDefault' || currentSchema.constructor.name === 'ZodOptional') {
+            currentSchema = (currentSchema as any)._def?.innerType;
+        }
+
+        // Handle array of enums (like weeklyDays)
+        if (currentSchema.constructor.name === 'ZodArray') {
+            const innerSchema = (currentSchema as any)._def.element;
+            if (innerSchema.constructor.name === 'ZodEnum') {
+                // Try different possible property names for enum values
+                let enumValues: string[] = [];
+
+                if ((innerSchema as any)._def.values) {
+                    enumValues = (innerSchema as any)._def.values;
+                } else if ((innerSchema as any)._def.options) {
+                    enumValues = (innerSchema as any)._def.options;
+                } else if ((innerSchema as any)._def.entries) {
+                    // For newer Zod versions, enum values are in _def.entries
+                    enumValues = Object.keys((innerSchema as any)._def.entries);
+                }
+
+                const options = enumValues.map((value: string) => ({
+                    value,
+                    label: value.charAt(0).toUpperCase() + value.slice(1)
+                }));
+                return options;
+            }
+        }
+
+        // Handle direct enums
+        if (currentSchema.constructor.name === 'ZodEnum') {
+            // Try different possible property names for enum values
+            let enumValues: string[] = [];
+
+            if ((currentSchema as any)._def.values) {
+                enumValues = (currentSchema as any)._def.values;
+            } else if ((currentSchema as any)._def.options) {
+                enumValues = (currentSchema as any)._def.options;
+            } else if ((currentSchema as any)._def.entries) {
+                // For newer Zod versions, enum values are in _def.entries
+                enumValues = Object.keys((currentSchema as any)._def.entries);
+            }
+
+            const options = enumValues.map((value: string) => ({
+                value,
+                label: value.charAt(0).toUpperCase() + value.slice(1)
+            }));
+            return options;
+        }
+
+        // Handle unions
+        if (currentSchema.constructor.name === 'ZodUnion') {
+            const options = (currentSchema as any)._def.options.map((option: any) => {
+                if (option.constructor.name === 'ZodLiteral') {
+                    const value = option._def.value;
+                    return {
+                        value: value.toString(),
+                        label: value.toString().charAt(0).toUpperCase() + value.toString().slice(1)
+                    };
+                }
+                return null;
+            }).filter(Boolean);
+            return options;
+        }
+
+        return [];
+    }, [formSchema]);
 
     // Automatically detect field types from schema
     const autoDetectedLists = useMemo(() => {
@@ -126,6 +214,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
             } else if (actualType === 'date') {
                 dateFields.push(fieldName);
             } else if (actualType === 'array') {
+                // All array fields should use MultiSelector
                 arrayFields.push(fieldName);
             } else if (actualType === 'number' || actualType === 'int' || actualType === 'float') {
                 numericFields.push(fieldName);
@@ -154,20 +243,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     const finalArrayList = multiSelectorList && multiSelectorList.length > 0 ? multiSelectorList : autoDetectedLists.arrayFields;
     const finalNumericList = autoDetectedLists.numericFields;
 
-    // Debug logging to see what's being detected
-    // console.log('Schema analysis:', {
-    //     schemaShape: Object.keys(formSchema.shape),
-    //     exclusionList,
-    //     autoDetectedLists,
-    //     finalLists: {
-    //         selector: finalSelectorList,
-    //         switch: finalSwitchList,
-    //         date: finalDateList,
-    //         array: finalArrayList,
-    //         numeric: finalNumericList,
-    //         object: autoDetectedLists.objectFields
-    //     }
-    // });
+
 
     const handleFinish = useCallback((success: boolean) => {
         if (buttonRef.current) {
@@ -175,7 +251,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         }
     }, []);
 
-    console.log(endpoint, 'endpoint');
+
     const { onPost, onPatch, loading } = fetchWithToast(
         endpoint,
         entityName,
@@ -217,112 +293,169 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                     {Object.keys(defaultValues).filter(fieldKey =>
                         !exclusionList?.includes(fieldKey) &&
                         !autoDetectedLists.objectFields.includes(fieldKey)
-                    ).map((fieldKey) => (
-                        <FormField
-                            key={fieldKey}
-                            control={form.control}
-                            name={fieldKey as Path<FormData>}
-                            render={({ field }) => (
-                                finalSelectorList?.includes(fieldKey) ? (
-                                    <FormItem className="space-y-0">
-                                        <FormLabel>
-                                            {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Selector
-                                                setSelectedValue={(value) => {
-                                                    field.onChange(value)
-                                                    form.trigger(fieldKey as Path<FormData>)
-                                                    // if (fieldKey === 'companyId' && optionsMap.companyId) {
-                                                    //     const selected = optionsMap.companyId.find((c: any) => c.value === value);
-                                                    //     form.setValue('companyName' as Path<FormData>, selected ? selected.label : '');
-                                                    // }
-                                                }}
-                                                placeholder={'Select'}
-                                                options={optionsMap?.[fieldKey] || []}
-                                                value={field.value as string}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                ) : finalArrayList?.includes(fieldKey) ? (
-                                    <FormItem>
-                                        <FormLabel>
-                                            {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <MultiSelector
-                                                options={optionsMap?.[fieldKey] || []}
-                                                setSelected={(value) => {
-                                                    field.onChange(value)
-                                                    form.trigger(fieldKey as Path<FormData>)
-                                                }}
-                                                selected={field.value as string[]}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                ) : finalSwitchList?.includes(fieldKey) ? (
-                                    <FormItem className="flex flex-col">
-                                        <FormLabel>
-                                            {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Switch
-                                                checked={field.value as boolean}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                ) : finalNumericList?.includes(fieldKey) ? (
-                                    <FormItem>
-                                        <FormControl>
-                                            <CompactInput
-                                                label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                                {...field}
-                                                type="number"
-                                                step="any"
-                                                placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
-                                                value={field.value as string | number}
-                                                onChange={(e) => {
-                                                    // Clear field error when user starts typing
-                                                    if (form.formState.errors[fieldKey as Path<FormData>]) {
-                                                        form.clearErrors(fieldKey as Path<FormData>);
-                                                    }
-                                                    // Convert string to number for numeric fields
-                                                    const numValue = e.target.value === '' ? '' : Number(e.target.value);
-                                                    field.onChange(numValue);
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                ) : (
-                                    <FormItem>
-                                        <FormControl>
-                                            <CompactInput
-                                                label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                                {...field}
-                                                {...(passwordList?.includes(fieldKey) ? { type: 'password' } : {})}
-                                                {...(finalDateList?.includes(fieldKey) ? { type: 'date' } : {})}
-                                                placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
-                                                value={field.value as string}
-                                                onChange={(e) => {
-                                                    // Clear field error when user starts typing
-                                                    if (form.formState.errors[fieldKey as Path<FormData>]) {
-                                                        form.clearErrors(fieldKey as Path<FormData>);
-                                                    }
-                                                    field.onChange(e);
-                                                }}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )
-                            )}
-                        />
-                    ))}
+                    ).map((fieldKey) => {
+
+                        return (
+                            <FormField
+                                key={fieldKey}
+                                control={form.control}
+                                name={fieldKey as Path<FormData>}
+                                render={({ field }) => (
+                                    finalSelectorList?.includes(fieldKey) ? (
+                                        <FormItem className="space-y-0">
+                                            <FormLabel>
+                                                {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+
+
+                                            <FormControl>
+                                                <Selector
+                                                    setSelectedValue={(value) => {
+                                                        field.onChange(value)
+                                                        form.trigger(fieldKey as Path<FormData>)
+                                                    }}
+                                                    placeholder={'Select'}
+                                                    options={optionsMap?.[fieldKey] || extractOptionsFromSchema(fieldKey)}
+                                                    value={field.value as string}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalArrayList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <MultiSelector
+                                                    options={optionsMap?.[fieldKey] || extractOptionsFromSchema(fieldKey)}
+                                                    setSelected={(value) => {
+                                                        field.onChange(value)
+                                                        form.trigger(fieldKey as Path<FormData>)
+                                                    }}
+                                                    selected={field.value as string[]}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalSwitchList?.includes(fieldKey) ? (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>
+                                                {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Switch
+                                                    checked={field.value as boolean}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalNumericList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormControl>
+                                                <CompactInput
+                                                    label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                    {...field}
+                                                    type="number"
+                                                    step="any"
+                                                    placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                    value={field.value as string | number}
+                                                    onChange={(e) => {
+                                                        // Clear field error when user starts typing
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        // Convert string to number for numeric fields
+                                                        const numValue = e.target.value === '' ? '' : Number(e.target.value);
+                                                        field.onChange(numValue);
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : dateTimeList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <DateTimePicker
+                                                    value={field.value as Date | string}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : dateOnlyList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    value={field.value as Date | string}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalDateList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    value={field.value as Date | string}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : (
+                                        <FormItem>
+                                            <FormControl>
+                                                <CompactInput
+                                                    label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                    {...field}
+                                                    {...(passwordList?.includes(fieldKey) ? { type: 'password' } : {})}
+                                                    placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                    value={field.value as string}
+                                                    onChange={(e) => {
+                                                        // Clear field error when user starts typing
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(e);
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )
+                                )}
+                            />
+                        )
+                    })}
                     <StatefulButton
                         ref={buttonRef}
                         type="submit"

@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { EventAdminPage } from "../event-admin-page";
-import { getCollection } from "@/lib/api/crud-generator";
+import { serverFetch } from "@/lib/server-fetch";
 import type { Event } from "@/types";
 
 export default async function SocialsPage() {
@@ -15,16 +15,16 @@ export default async function SocialsPage() {
         redirect("/dashboard");
     }
 
-    // Fetch events on the server side
-    const collection = await getCollection("events");
-    const events = await collection.find({ type: "social" }).toArray();
+    // Fetch events through API route (handles serialization)
+    const result = await serverFetch("/api/events?type=social", "Failed to fetch social events");
+    const events = result.success ? result.data : [];
 
     return (
         <EventAdminPage
             eventType="social"
             title="Socials"
             description="Manage social dance events"
-            initialEvents={events as unknown as Event[]}
+            initialEvents={events as Event[]}
         />
     );
 }

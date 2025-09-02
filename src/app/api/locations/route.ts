@@ -9,6 +9,7 @@ const config = {
   schema: locationSchema,
   auth: true,
   roles: ["admin", "visitor"],
+  projection: {} as Record<string, 0 | 1>, // This will enable the transform function
   beforeCreate: async (data: LocationInput) => {
     return {
       ...data,

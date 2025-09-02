@@ -56,13 +56,22 @@ export async function getCollection(entity: string) {
 
 export function transform<T>(data: T, config: CrudConfig): T {
   if (config.projection) {
-    const transformed: any = {};
-    Object.keys(data as any).forEach((key) => {
-      if (config.projection![key] !== 0) {
-        transformed[key] = (data as any)[key];
+    const transformed: Partial<T> = {};
+    for (const key of Object.keys(data as Record<string, unknown>)) {
+      if (key === "_id") {
+        // Transform _id to id
+        (transformed as any).id = String(
+          (data as Record<string, unknown>)[key]
+        );
+        continue;
       }
-    });
-    return transformed;
+      if (config.projection[key] !== 0) {
+        transformed[key as keyof T] = (data as Record<string, unknown>)[
+          key
+        ] as T[keyof T];
+      }
+    }
+    return transformed as T;
   }
   return data;
 }
@@ -77,10 +86,23 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
       const sort = config.sort || { createdAt: -1 as const };
 
       const documents = await collection.find(filters).sort(sort).toArray();
+      console.log(
+        "GET route - documents before transform:",
+        documents.length,
+        "docs"
+      );
+      console.log("GET route - config projection:", config.projection);
+
+      const transformedDocs = documents.map((doc) => transform(doc, config));
+      console.log(
+        "GET route - documents after transform:",
+        transformedDocs.length,
+        "docs"
+      );
 
       return Response.json({
         success: true,
-        data: documents.map((doc) => transform(doc, config)),
+        data: transformedDocs,
       });
     } catch (error) {
       return Response.json(
