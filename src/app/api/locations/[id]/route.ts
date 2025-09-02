@@ -8,7 +8,7 @@ const config = {
   entity: "locations",
   schema: locationSchema,
   auth: true,
-  roles: ["admin"],
+  roles: ["admin", "visitor"],
   beforeUpdate: async (data: Partial<LocationInput>) => {
     return {
       ...data,

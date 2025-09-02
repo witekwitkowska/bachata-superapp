@@ -28,8 +28,8 @@ export interface CrudConfig<T = any> {
 }
 
 export async function checkAuth(config: CrudConfig, request?: NextRequest) {
+  console.log("config", config, request?.method);
   if (!config.auth || request?.method === "GET") return null;
-
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");

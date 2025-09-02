@@ -8,7 +8,7 @@ const config = {
   entity: "locations",
   schema: locationSchema,
   auth: true,
-  roles: ["admin"],
+  roles: ["admin", "visitor"],
   beforeCreate: async (data: LocationInput) => {
     return {
       ...data,

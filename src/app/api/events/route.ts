@@ -8,7 +8,7 @@ const config = {
   entity: "events",
   schema: eventSchema,
   auth: true,
-  roles: ["admin"],
+  roles: ["admin", "visitor"],
   beforeCreate: async (data: EventInput) => {
     return {
       ...data,
