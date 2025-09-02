@@ -18,6 +18,6 @@ export default async function ProfilePage({
         return null; // This will trigger a redirect in the layout
     }
 
-    const { data } = await serverFetch(`${baseUrl}/api/users-v2/${session.user.id}`, "Failed to load profile");
+    const { data } = await serverFetch(`${baseUrl}/api/users/${session.user.id}`, "Failed to load profile");
     return <ProfileEdit session={session} profile={data} defaultTab={defaultValues.tab || "information"} />;
 }

@@ -79,7 +79,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                         <ConfigurableForm
                             className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
                             formSchema={userEditSchema}
-                            endpoint={`/users-v2/${profile._id}`}
+                            endpoint={`/users/${profile._id}`}
                             endpointType="PATCH"
                             entityName="user"
                             displayNames={{
@@ -123,7 +123,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                     <CardContent className="p-6">
                         <FormWrapper
                             ref={formWrapperRef}
-                            endpoint={`/users-v2/${profile._id}`}
+                            endpoint={`/users/${profile._id}`}
                             endpointType="PATCH"
                             entityName="user"
                             buttonTitle="Save"
