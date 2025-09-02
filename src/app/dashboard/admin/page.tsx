@@ -53,14 +53,19 @@ export default function AdminPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">
-                            <Link href="/admin/socials">
+                            <Link href="/dashboard/admin/socials">
                                 <Button variant="outline" className="w-full justify-start">
                                     Add Social Event
                                 </Button>
                             </Link>
-                            <Link href="/admin/locations">
+                            <Link href="/dashboard/admin/locations">
                                 <Button variant="outline" className="w-full justify-start">
                                     Add Location
+                                </Button>
+                            </Link>
+                            <Link href="/dashboard/admin/tags">
+                                <Button variant="outline" className="w-full justify-start">
+                                    Manage Tags
                                 </Button>
                             </Link>
                         </div>

@@ -140,11 +140,22 @@ export const uploadBase64ToImgBB = async (
   }
 };
 
+/**
+ * Compress an image file with various aspect ratio options
+ * @param file - The image file to compress
+ * @param maxWidth - Maximum width for the compressed image (default: 1200)
+ * @param quality - JPEG quality (0.1 to 1.0, default: 0.8)
+ * @param aspectRatio - Aspect ratio mode:
+ *   - "horizontal": Crop to 4:3 aspect ratio (default)
+ *   - "square": Crop to 1:1 aspect ratio
+ *   - "maintain": Keep original aspect ratio without cropping
+ * @returns Promise<Blob> - The compressed image blob
+ */
 export const compressImage = (
   file: File,
   maxWidth = 1200,
   quality = 0.8,
-  aspectRatio: "horizontal" | "square" = "horizontal"
+  aspectRatio: "horizontal" | "square" | "maintain" = "horizontal"
 ): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -161,6 +172,50 @@ export const compressImage = (
           sWidth = originalWidth,
           sHeight = originalHeight;
 
+        // Handle different aspect ratio modes
+        if (aspectRatio === "maintain") {
+          // Maintain original aspect ratio without cropping
+          const scale = Math.min(
+            maxWidth / originalWidth,
+            maxWidth / originalHeight
+          );
+          const width = originalWidth * scale;
+          const height = originalHeight * scale;
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(
+              img,
+              0,
+              0,
+              originalWidth,
+              originalHeight,
+              0,
+              0,
+              width,
+              height
+            );
+          }
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error("Canvas.toBlob returned null"));
+              }
+            },
+            "image/jpeg",
+            quality
+          );
+          return;
+        }
+
+        // Original cropping logic for "horizontal" and "square" modes
         if (originalHeight > originalWidth) {
           const targetAspectRatio = aspectRatio === "horizontal" ? 4 / 3 : 1;
           const targetHeight = originalWidth / targetAspectRatio;
@@ -204,9 +259,18 @@ export const compressImage = (
   });
 };
 
+/**
+ * Upload an image with automatic compression if needed
+ * @param file - The image file to upload
+ * @param aspectRatio - Aspect ratio mode for compression:
+ *   - "horizontal": Crop to 4:3 aspect ratio (default)
+ *   - "square": Crop to 1:1 aspect ratio
+ *   - "maintain": Keep original aspect ratio without cropping
+ * @returns Promise<UploadedImage> - The uploaded image data
+ */
 export const uploadImageWithCompression = async (
   file: File,
-  aspectRatio: "horizontal" | "square" = "horizontal"
+  aspectRatio: "horizontal" | "square" | "maintain" = "horizontal"
 ): Promise<UploadedImage> => {
   if (!file) {
     throw new Error("No file provided");

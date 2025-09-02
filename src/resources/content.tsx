@@ -291,4 +291,11 @@ const gallery: Gallery = {
   ],
 };
 
-export { person, social, newsletter, home, about, blog, work, gallery };
+const posts = {
+  path: "/posts",
+  label: "Posts",
+  title: `Community Posts – ${person.name}`,
+  description: `Share and discover bachata content from the community`,
+};
+
+export { person, social, newsletter, home, about, blog, work, gallery, posts };

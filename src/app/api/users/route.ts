@@ -1,4 +1,4 @@
-import { userCrud } from "@/lib/api/examples/user-crud";
+import { userCrud } from "@/lib/api/user-crud";
 
 // GET all users (with pagination, filtering, and role-based access)
 export const GET = userCrud.GET;

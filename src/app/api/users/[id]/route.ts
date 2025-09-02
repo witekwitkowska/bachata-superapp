@@ -1,4 +1,4 @@
-import { userCrud } from "@/lib/api/examples/user-crud";
+import { userCrud } from "@/lib/api/user-crud";
 
 // GET user by ID
 export const GET = userCrud.GET_BY_ID;

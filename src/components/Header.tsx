@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 import { Fade, Flex, Line, Row, ToggleButton } from "@once-ui-system/core";
 
-import { routes, display, person, about, blog, work, gallery } from "@/resources";
+import { routes, display, person, about, blog, work, posts } from "@/resources";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Header.module.scss";
 
@@ -381,25 +381,25 @@ export const Header = () => {
                   </Row>
                 </>
               )}
-              {routes["/gallery"] && (
+              {routes["/posts"] && (
                 <>
                   <Row s={{ hide: true }}>
                     <AnimatedToggleButton
-                      prefixIcon="gallery"
-                      href="/gallery"
-                      label={gallery.label}
-                      selected={pathname.startsWith("/gallery")}
-                      itemKey="gallery"
+                      prefixIcon="message-circle"
+                      href="/posts"
+                      label={posts.label}
+                      selected={pathname.startsWith("/posts")}
+                      itemKey="posts"
                       onHover={handleHover}
                       onLeave={handleLeave}
                     />
                   </Row>
                   <Row hide s={{ hide: false }}>
                     <AnimatedToggleButton
-                      prefixIcon="gallery"
-                      href="/gallery"
-                      selected={pathname.startsWith("/gallery")}
-                      itemKey="gallery"
+                      prefixIcon="message-circle"
+                      href="/posts"
+                      selected={pathname.startsWith("/posts")}
+                      itemKey="posts"
                       onHover={handleHover}
                       onLeave={handleLeave}
                     />

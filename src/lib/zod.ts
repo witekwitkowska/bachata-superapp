@@ -220,3 +220,51 @@ export const passwordChangeSchema = z
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+// User interaction schema for reactions (lightnings, fires, ices)
+export const userInteractionSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  name: z.string().min(1, "Name is required"),
+  profileImage: z.string().url().optional(),
+});
+
+// Post Schema
+export const postSchema = z.object({
+  authorId: z.string().min(1, "Author ID is required"),
+  caption: z
+    .string()
+    .min(1, "Caption is required")
+    .max(2000, "Caption must be less than 2000 characters"),
+  images: z.array(z.url()).default([]),
+  lightnings: z.array(userInteractionSchema).default([]),
+  fires: z.array(userInteractionSchema).default([]),
+  ices: z.array(userInteractionSchema).default([]),
+  createdAt: z.string().default(() => new Date().toISOString()),
+  updatedAt: z.string().default(() => new Date().toISOString()),
+  published: z.boolean().default(true),
+  tags: z.array(z.string()).default([]).optional(),
+  location: z.string().default("").optional(),
+});
+
+// Tag Schema
+export const tagSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Tag name is required")
+    .max(50, "Tag name must be less than 50 characters"),
+  description: z
+    .string()
+    .max(200, "Description must be less than 200 characters")
+    .optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-F]{6}$/i, "Color must be a valid hex color")
+    .default("#3B82F6"),
+  category: z
+    .enum(["general", "event", "location", "skill", "style"])
+    .default("general"),
+  isActive: z.boolean().default(true),
+  usageCount: z.number().default(0),
+  createdAt: z.string().default(() => new Date().toISOString()),
+  updatedAt: z.string().default(() => new Date().toISOString()),
+});

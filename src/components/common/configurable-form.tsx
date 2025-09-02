@@ -6,7 +6,7 @@ import { Path, useForm, UseFormSetValue, DefaultValues } from "react-hook-form";
 import { Form, FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { FormField } from "@/components/ui/form";
 import { fetchWithToast } from "@/hooks/fetch-with-toast";
-import { forwardRef, useImperativeHandle, useMemo, useRef, useCallback } from "react";
+import { forwardRef, useImperativeHandle, useMemo, useRef, useCallback, useState } from "react";
 import MultiSelector from "@/components/common/multi-selector";
 import Selector from "@/components/common/selector";
 import { getZodRequiredFields } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { StatefulButton, StatefulButtonRef } from "../ui/stateful-button";
 import { Switch } from "@/components/ui/switch";
 import { DateTimePicker } from "./date-time-picker";
 import { DatePicker } from "./date-picker";
+import { ImageUploadWithPreview } from "../image-upload-with-preview";
 
 type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     formSchema: T;
@@ -39,6 +40,7 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     dateTimeList?: string[] // Fields that need full date + time
     dateOnlyList?: string[] // Fields that need date only (no time)
     weekdayList?: string[] // Fields that need weekday selection
+    imagesList?: string[] // Fields that need image upload with preview
     containerClassName?: string;
     exclusionList?: string[];
     onError?: (error: unknown) => void;
@@ -75,19 +77,13 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     dateTimeList,
     dateOnlyList,
     weekdayList,
+    imagesList,
     containerClassName,
     exclusionList,
     onFormSuccess
 }: ConfigurableFormProps<T>, ref: React.Ref<ConfigurableFormRef<T>>) {
     // Define the form data type
     type FormData = z.infer<T>;
-
-    // Basic debugging
-    console.log('ConfigurableForm rendering with:', {
-        entityName,
-        optionsMap,
-        defaultValues: Object.keys(defaultValues)
-    });
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema) as any,
@@ -96,6 +92,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     });
 
     const buttonRef = useRef<StatefulButtonRef>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     useImperativeHandle(ref, () => ({
         setValue: form.setValue,
@@ -269,7 +266,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
 
     const { isValid, isDirty, isSubmitting } = form.formState;
 
-    const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading;
+    const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading || isUploading;
 
     return (
         <div className={containerClassName}>
@@ -427,6 +424,34 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                                         field.onChange(value);
                                                     }}
                                                     placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : imagesList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <ImageUploadWithPreview
+                                                    existingImages={field.value as string[] || []}
+                                                    onImagesChange={(images) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(images);
+                                                    }}
+                                                    maxImages={10}
+                                                    multiple={true}
+                                                    showExistingImages={true}
+                                                    allowRemoveExisting={true}
+                                                    onStartUpload={() => {
+                                                        setIsUploading(true);
+                                                    }}
+                                                    onEndUpload={() => {
+                                                        setIsUploading(false);
+                                                    }}
                                                 />
                                             </FormControl>
                                             <FormMessage />

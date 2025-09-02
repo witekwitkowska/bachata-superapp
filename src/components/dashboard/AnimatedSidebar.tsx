@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Menu, X, User, Settings, BookOpen, Home, GraduationCap, LogOut, Calendar, MapPin, Users, Shield } from "lucide-react";
+import { Menu, X, User, Settings, BookOpen, Home, GraduationCap, LogOut, Calendar, MapPin, Users, Shield, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -23,6 +23,7 @@ const navigation = [
     { id: "admin-workshops", label: "Manage Workshops", icon: GraduationCap, href: "/dashboard/admin/workshops", adminOnly: true },
     { id: "admin-locations", label: "Manage Locations", icon: MapPin, href: "/dashboard/admin/locations", adminOnly: true },
     { id: "admin-events", label: "All Events", icon: Calendar, href: "/dashboard/admin/events", adminOnly: true },
+    { id: "admin-tags", label: "Manage Tags", icon: Tag, href: "/dashboard/admin/tags", adminOnly: true },
 ];
 
 export function AnimatedSidebar() {

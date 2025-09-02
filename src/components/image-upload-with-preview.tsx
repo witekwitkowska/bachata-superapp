@@ -4,70 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, X, Image as ImageIcon, Crown, GripVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Import the compression function
-const compressImage = (
-    file: File,
-    maxWidth = 1200,
-    quality = 0.8,
-    aspectRatio: "horizontal" | "square" = "horizontal"
-): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            const img = new Image();
-
-            img.onload = () => {
-                const originalWidth = img.width;
-                const originalHeight = img.height;
-
-                let sx = 0,
-                    sy = 0,
-                    sWidth = originalWidth,
-                    sHeight = originalHeight;
-
-                if (originalHeight > originalWidth) {
-                    const targetAspectRatio = aspectRatio === "horizontal" ? 4 / 3 : 1;
-                    const targetHeight = originalWidth / targetAspectRatio;
-
-                    sHeight = Math.min(originalHeight, targetHeight);
-                    sy = (originalHeight - sHeight) / 2;
-                }
-
-                const scale = maxWidth / sWidth;
-                const width = Math.min(maxWidth, sWidth);
-                const height = aspectRatio === "square" ? width : sHeight * scale;
-
-                const canvas = document.createElement("canvas");
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext("2d");
-                if (ctx) {
-                    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
-                }
-
-                canvas.toBlob(
-                    (blob) => {
-                        if (blob) {
-                            resolve(blob);
-                        } else {
-                            reject(new Error("Canvas.toBlob returned null"));
-                        }
-                    },
-                    "image/jpeg",
-                    quality
-                );
-            };
-
-            img.onerror = () => reject(new Error("Image failed to load"));
-            img.src = e.target?.result as string;
-        };
-
-        reader.onerror = () => reject(new Error("Failed to read file"));
-        reader.readAsDataURL(file);
-    });
-};
+// Import the compression function from lib
+import { compressImage } from "@/lib/imgbb-upload";
 
 interface ImageData {
     id: string;
@@ -104,6 +42,7 @@ interface ImageUploadWithPreviewProps {
     onProfilePhotoChange?: (imageUrl: string | null) => void; // Callback when profile photo changes
     onImagesReorder?: (images: string[]) => void; // Callback when images are reordered
     currentProfilePhoto?: string; // Current profile photo URL
+    aspectRatio?: "horizontal" | "square" | "maintain"; // Aspect ratio for compression
 }
 
 export function ImageUploadWithPreview({
@@ -123,6 +62,7 @@ export function ImageUploadWithPreview({
     onProfilePhotoChange,
     onImagesReorder,
     currentProfilePhoto = "",
+    aspectRatio = "maintain",
 }: ImageUploadWithPreviewProps) {
     const { toast } = useToast();
     const [uploadedFiles, setUploadedFiles] = useState<ImageData[]>([]);
@@ -183,12 +123,12 @@ export function ImageUploadWithPreview({
                 if (shouldCompress) {
                     // Start with higher quality and reduce if needed
                     let quality = 0.9;
-                    let finalBlob = await compressImage(file, 1200, quality, "horizontal");
+                    let finalBlob = await compressImage(file, 1200, quality, aspectRatio);
 
                     // If still too large, reduce quality in larger steps for efficiency
                     while (finalBlob.size > oneMB && quality > 0.1) {
                         quality -= 0.15;
-                        finalBlob = await compressImage(file, 1200, quality, "horizontal");
+                        finalBlob = await compressImage(file, 1200, quality, aspectRatio);
                     }
 
                     // If we still can't get under 1MB, try reducing dimensions
@@ -196,7 +136,7 @@ export function ImageUploadWithPreview({
                         let maxWidth = 1000;
                         while (finalBlob.size > oneMB && maxWidth > 400) {
                             maxWidth -= 100;
-                            finalBlob = await compressImage(file, maxWidth, 0.5, "horizontal");
+                            finalBlob = await compressImage(file, maxWidth, 0.5, aspectRatio);
                         }
                     }
 
