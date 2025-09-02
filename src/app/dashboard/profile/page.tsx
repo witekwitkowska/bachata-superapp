@@ -2,10 +2,14 @@ import { ProfileEdit } from "@/components/dashboard/ProfileEdit";
 import { auth } from "@/auth";
 import { serverFetch } from "@/lib/server-fetch";
 import { baseUrl } from "@/lib/utils";
-import { PageProps } from "next/types";
 
-
-export default async function ProfilePage({ params, searchParams }: PageProps) {
+export default async function ProfilePage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ id?: string }>;
+    searchParams: Promise<{ tab?: string }>;
+}) {
     const { id } = await params;
     const defaultValues = await searchParams;
     const session = await auth();
