@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { handleFetch, handlePatch } from "@/lib/fetch";
 
 interface UserProfile {
     id: string;
@@ -50,10 +51,9 @@ export function UserEditForm() {
     const loadProfile = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/users/edit/${session?.user?.id}`);
-            if (response.ok) {
-                const data = await response.json();
-                setProfile(data.data);
+            const { data, success } = await handleFetch(`/api/users/edit/${session?.user?.id}`);
+            if (success) {
+                setProfile(data);
             } else {
                 toast.error("Failed to load profile");
             }
@@ -69,19 +69,14 @@ export function UserEditForm() {
 
         try {
             setSaving(true);
-            const response = await fetch(`/api/users/edit/${profile.id}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(profile),
+            const { success, error } = await handlePatch(`/api/users/edit/${profile.id}`, {
+                profile,
             });
 
-            if (response.ok) {
+            if (success) {
                 toast.success("Profile updated successfully!");
             } else {
-                const error = await response.json();
-                toast.error(error.error || "Failed to update profile");
+                toast.error(error || "Failed to update profile");
             }
         } catch (error) {
             toast.error("Error updating profile");

@@ -1,12 +1,25 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Altivo";
+  src: url("/fonts/regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "AltivoBold";
+  src: url("/fonts/bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "AltivoBlack";
+  src: url("/fonts/black.woff2") format("woff2");
+}
+
 /* Your custom styles can go here */
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: "Altivo", sans-serif;
   
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -115,6 +128,6 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }

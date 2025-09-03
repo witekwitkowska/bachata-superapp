@@ -22,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { handleFetch } from "@/lib/fetch";
+import { UserProfile } from "@/types/user";
+import { Event, Location as EventLocation } from "@/types/event.types";
 
 // Types for our data
 interface SearchResult {
@@ -134,26 +136,26 @@ export default function Home() {
 
         const eventsData = await handleFetch(`/api/events?type=${eventTypes.join(",")}&published=true&limit=50`, "Failed to fetch events");
         if (eventsData.success && eventsData.data) {
-          const events = eventsData.data.map((event: Record<string, unknown>) => ({
-            id: (event._id || event.id) as string,
+          const events = eventsData.data.map((event: Event) => ({
+            id: (event.id) as string,
             type: event.type as string,
             title: event.title as string,
             description: event.description as string,
-            location: (event.location as Record<string, unknown>)?.name as string || "Unknown Location",
-            city: (event.location as Record<string, unknown>)?.city as string,
-            country: (event.location as Record<string, unknown>)?.country as string,
-            date: event.time as string,
+            location: (event.location as EventLocation)?.name || "Unknown Location",
+            city: (event.location as EventLocation)?.city || "",
+            country: (event.location as EventLocation)?.country || "",
+            date: event.time as unknown as string,
             rating: (event.rating as number) || 4.5,
             attendees: (event.maxAttendees as number) || 0,
-            image: (event.image as string) || "/images/avatar.jpg",
-            teacherName: (event.teacher as Record<string, unknown>)?.name as string,
-            teacherImage: (event.teacher as Record<string, unknown>)?.image as string,
+            teacherName: (event.teacher as any)?.name || "",
+            teacherImage: (event.teacher as any)?.image || (event.teacher as any)?.avatars?.[0] || "",
             isPaid: event.isPaid as boolean,
             price: event.price as number,
             currency: event.currency as string,
-            skillLevel: event.skillLevel as string,
-            focusAreas: event.focusAreas as string[],
-            createdAt: event.createdAt as string
+            skillLevel: (event as any).skillLevel as string || "", // Type assertion for workshop/private-session
+            focusAreas: (event as any).focusAreas as string[] || [], // Type assertion for workshop/private-session
+            createdAt: event.createdAt instanceof Date ? event.createdAt.toISOString() : event.createdAt as string,
+            image: event.images?.[0] || ""
           }));
           allResults.push(...events);
         }
@@ -162,21 +164,22 @@ export default function Home() {
       // Fetch artists (users with teacher role)
       if (activeTab === "all" || activeTab === "artists") {
         const artistsData = await handleFetch("/api/users?role=teacher&published=true&limit=50", "Failed to fetch artists");
+        console.log(artistsData, 'artistsData');
         if (artistsData.success && artistsData.data) {
-          const artists = artistsData.data.map((user: Record<string, unknown>) => ({
-            id: (user._id || user.id) as string,
+          const artists = artistsData.data.map((user: UserProfile) => ({
+            id: (user.id) as string,
             type: "artist",
             name: user.name as string,
-            specialty: user.specialty as string,
+            specialty: user.bachataLevel as string,
             bio: user.bio as string,
             location: (user.location as string) || "Unknown Location",
-            city: user.city as string,
-            country: user.country as string,
-            rating: (user.rating as number) || 4.5,
-            students: (user.studentsCount as number) || 0,
-            image: (user.image as string) || "/images/avatar.jpg",
-            experience: user.experience as string,
-            styles: user.styles as string[],
+            city: user.location as string,
+            country: user.location as string,
+            rating: (user.followersCount as number) || 4.5,
+            students: (user.followersCount as number) || 0,
+            image: (user.avatars?.[0] || user.gallery?.[0] || "") as string,
+            experience: user.bachataLevel as string,
+            // styles: user.bachataLevel as string[],
             createdAt: user.createdAt as string
           }));
           allResults.push(...artists);
@@ -245,6 +248,12 @@ export default function Home() {
     fetchData();
   };
 
+  const formatTabTitle = (tab: string) => {
+    return activeTab.replace(/(^[a-z])|-([a-z])/g, (m, p1, p2) =>
+      p1 ? p1.toUpperCase() : " " + p2.toUpperCase()
+    );
+  }
+
   return (
     <div className="w-full min-h-screen bg-transparent">
       {/* Hero Section */}
@@ -261,7 +270,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Discover {activeTab === "all" ? "Bachata" : activeTab} in Barcelona
+            Discover {activeTab === "all" ? "Bachata" : formatTabTitle(activeTab)} in Barcelona
           </motion.h1>
           <motion.p
             className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto"

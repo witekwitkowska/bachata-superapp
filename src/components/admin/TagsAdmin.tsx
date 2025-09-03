@@ -15,6 +15,7 @@ import { ConfigurableForm } from "@/components/common/configurable-form";
 import { tagSchema } from "@/lib/zod";
 import type { Tag, TagInput, TagCategory } from "@/types/tag.types";
 import { toast } from "sonner";
+import { handleDelete, handleFetch, handlePatch } from "@/lib/fetch";
 
 export function TagsAdmin() {
     const [tags, setTags] = useState<Tag[]>([]);
@@ -27,11 +28,9 @@ export function TagsAdmin() {
 
     const fetchTags = async () => {
         try {
-            const response = await fetch("/api/website-elements/tags");
-            const result = await response.json();
-
-            if (result.success) {
-                setTags(result.data);
+            const { data, success } = await handleFetch("/api/website-elements/tags", "Failed to fetch tags");
+            if (success) {
+                setTags(data);
             } else {
                 toast.error("Failed to load tags");
             }
@@ -45,17 +44,13 @@ export function TagsAdmin() {
 
     const handleDeleteTag = async (tagId: string) => {
         try {
-            const response = await fetch(`/api/website-elements/tags/${tagId}`, {
-                method: "DELETE",
-            });
+            const { success, error } = await handleDelete(`/api/website-elements/tags/${tagId}`, "Failed to delete tag");
 
-            const result = await response.json();
-
-            if (result.success) {
+            if (success) {
                 toast.success("Tag deleted successfully!");
                 fetchTags();
             } else {
-                toast.error(result.error || "Failed to delete tag");
+                toast.error(error || "Failed to delete tag");
             }
         } catch (error) {
             toast.error("An error occurred while deleting the tag");
@@ -65,23 +60,15 @@ export function TagsAdmin() {
 
     const handleToggleStatus = async (tag: Tag) => {
         try {
-            const response = await fetch(`/api/website-elements/tags/${tag.id}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    isActive: !tag.isActive,
-                }),
-            });
+            const { success, error } = await handlePatch(`/api/website-elements/tags/${tag.id}`, {
+                isActive: !tag.isActive,
+            }, "Failed to update tag");
 
-            const result = await response.json();
-
-            if (result.success) {
+            if (success) {
                 toast.success(`Tag ${tag.isActive ? "deactivated" : "activated"} successfully!`);
                 fetchTags();
             } else {
-                toast.error(result.error || "Failed to update tag");
+                toast.error(error || "Failed to update tag");
             }
         } catch (error) {
             toast.error("An error occurred while updating the tag");
@@ -197,7 +184,7 @@ export function TagsAdmin() {
                         </DialogHeader>
                         <ConfigurableForm
                             formSchema={tagSchema}
-                            endpoint="/api/website-elements/tags"
+                            endpoint="/website-elements/tags"
                             entityName="tag"
                             displayNames={displayNames}
                             defaultValues={defaultValues}
@@ -293,7 +280,7 @@ export function TagsAdmin() {
                                         </div>
                                         <div>
                                             <div className="flex items-center space-x-2">
-                                                <h3 className="font-semibold">{tag.name}</h3>
+                                                <h3 className="font-semibold mr-4">{tag.name}</h3>
                                                 <Badge className={getCategoryColor(tag.category)}>
                                                     {tag.category}
                                                 </Badge>

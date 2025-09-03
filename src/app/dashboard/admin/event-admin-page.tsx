@@ -10,6 +10,7 @@ import { EventForm } from "./event-form";
 import type { Event } from "@/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useTableRefresh } from "@/hooks/use-table-refresh";
+import { handleDelete, handleFetch } from "@/lib/fetch";
 
 interface EventAdminPageProps {
     eventType: string;
@@ -31,10 +32,9 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
 
     const fetchEvents = async () => {
         try {
-            const response = await fetch("/api/events");
-            const data = await response.json();
-            if (data.success) {
-                const filteredEvents = data.data.filter((event: Event) => event.type === eventType);
+            const { data, success } = await handleFetch("/api/events", "Failed to fetch events");
+            if (success) {
+                const filteredEvents = data.filter((event: Event) => event.type === eventType);
                 setEvents(filteredEvents);
             }
         } catch (error) {
@@ -46,13 +46,9 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
         if (!confirm("Are you sure you want to delete this event?")) return;
 
         try {
-            const response = await fetch(`/api/events/${id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
-                // fetchEvents();
-                scheduleRefresh();
-            }
+            await handleDelete(`/api/events/${id}`, "Failed to delete event");
+            // fetchEvents();
+            scheduleRefresh();
         } catch (error) {
             console.error("Error deleting event:", error);
         }
@@ -99,10 +95,11 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
             header: "Title",
         },
         {
-            accessorKey: "locationId",
+            accessorKey: "location",
             header: "Location",
             cell: ({ row }) => {
-                return row.getValue("locationId");
+                const location = row.getValue("location") as Record<string, string>;
+                return location?.name;
             },
         },
         {
@@ -183,7 +180,7 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
                     <DialogTrigger asChild>
                         <Button>Add New {title.slice(0, -1)}</Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
                                 {editingEvent ? "Edit" : "Add New"} {title.slice(0, -1)}

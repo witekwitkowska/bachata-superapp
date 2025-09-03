@@ -44,6 +44,7 @@ export const baseEventSchema = z.object({
   currency: z.string().default("EUR").optional(),
   maxAttendees: z.number().min(1).optional(),
   published: z.boolean().default(false),
+  images: z.array(z.url()).default([]),
 });
 
 // Social Event Schema

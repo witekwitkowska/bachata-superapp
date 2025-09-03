@@ -49,7 +49,6 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
     });
 
     const updateFormState = useCallback((field: string, value: unknown) => {
-        console.log('Updating form state:', { field, value });
         formWrapperRef.current?.setValue(field, value, { shouldValidate: true, shouldDirty: true });
         // Also update local state to ensure the component gets updated values
         setFormValues(prev => ({
@@ -67,6 +66,8 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
         });
     }, [profile]);
 
+    console.log(profile, 'profile');
+
     return (
         <Tabs value={activeTab} onValueChange={handleSetActiveTab}>
             <TabsList>
@@ -79,7 +80,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                         <ConfigurableForm
                             className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
                             formSchema={userEditSchema}
-                            endpoint={`users/${profile._id}`}
+                            endpoint={`users/${profile.id}`}
                             endpointType="PATCH"
                             entityName="user"
                             displayNames={{
@@ -104,7 +105,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                             }}
                             switchList={["isPublic"]}
                             extraData={{
-                                id: profile._id.toString(),
+                                id: profile.id.toString(),
                             }}
                             buttonTitle="Save"
                             headerTitle="Profile"
@@ -121,14 +122,14 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                     <CardContent className="p-6">
                         <FormWrapper
                             ref={formWrapperRef}
-                            endpoint={`users/${profile._id}`}
+                            endpoint={`users/${profile.id}`}
                             endpointType="PATCH"
                             entityName="user"
                             buttonTitle="Save"
                             formSchema={userEditImagesSchema}
                             defaultValues={formValues}
                             extraData={{
-                                id: profile._id.toString(),
+                                id: profile.id.toString(),
                             }}
                             onError={(error) => {
                                 toast.error("Error updating images");
@@ -151,7 +152,6 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                                     <h2 className="text-2xl font-bold">{item.label}</h2>
                                     <ImageUploadWithPreview
                                         onImagesChange={(images) => {
-                                            console.log(images, 'images');
                                             updateFormState(item.value, images);
                                         }}
                                         existingImages={formValues[item.value as keyof typeof formValues]}

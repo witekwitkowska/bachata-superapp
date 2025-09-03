@@ -1,7 +1,7 @@
 "use client";
 
 import { ConfigurableForm } from "@/components/common/configurable-form";
-import { formatFieldName, getSchemaFields } from "@/utils";
+import { formatFieldName, getSchemaFields, extractSchemaDefaults } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { locationSchema } from "@/lib/zod";
 import type { Location } from "@/types";
@@ -28,46 +28,36 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
             displayNames[field] = formatFieldName(field);
         }
 
+        console.log('Location form - Display names generated:', displayNames);
+        console.log('Location form - Schema fields:', schemaFields);
         return displayNames;
     };
 
     const getDefaultValues = () => {
-        try {
-            // Parse with minimal data to get defaults from Zod schema
-            const baseDefaults = locationSchema.parse({});
+        // Extract default values from schema
+        const schemaDefaults = extractSchemaDefaults(locationSchema);
 
-            // Override with initial data if provided
-            if (initialData) {
-                return {
-                    ...baseDefaults,
-                    ...initialData,
-                };
-            }
+        // Override with initial data if provided
+        if (initialData) {
+            // Only include fields that exist in the schema
+            const schemaKeys = Object.keys(locationSchema.shape);
+            const filteredInitialData = Object.keys(initialData).reduce((acc, key) => {
+                if (schemaKeys.includes(key)) {
+                    acc[key] = (initialData as any)[key];
+                }
+                return acc;
+            }, {} as Record<string, any>);
 
-            return baseDefaults;
-        } catch (error) {
-            console.error("Error getting schema defaults:", error);
-            // Fallback to basic defaults if schema parsing fails
-            const fallbackDefaults = {
-                name: "",
-                address: "",
-                city: "",
-                country: "",
-                coordinates: {
-                    lat: 0,
-                    lng: 0,
-                },
+            const finalDefaults = {
+                ...schemaDefaults,
+                ...filteredInitialData,
             };
-
-            if (initialData) {
-                return {
-                    ...fallbackDefaults,
-                    ...initialData,
-                };
-            }
-
-            return fallbackDefaults;
+            console.log('Location form - Final defaults with initial data:', finalDefaults);
+            return finalDefaults;
         }
+
+        console.log('Location form - Schema defaults:', schemaDefaults);
+        return schemaDefaults;
     };
 
     return (
@@ -78,7 +68,7 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
                 entityName="location"
                 endpointType={initialData ? "PATCH" : "POST"}
                 displayNames={getDisplayNames()}
-                defaultValues={getDefaultValues()}
+                defaultValues={initialData ? getDefaultValues() : undefined}
                 buttonTitle={initialData ? "Update Location" : "Create Location"}
                 headerTitle={`${initialData ? "Edit" : "Add New"} Location`}
                 loadingTitle="Saving..."

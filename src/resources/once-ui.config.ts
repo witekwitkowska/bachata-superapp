@@ -35,6 +35,8 @@ const routes: RoutesConfig = {
   "/dashboard/admin/workshops": true,
   "/dashboard/admin/locations": true,
   "/dashboard/admin/events": true,
+  "/dashboard/admin/tags": true,
+  "/profile/[userId]": true,
 };
 
 const display: DisplayConfig = {
@@ -53,27 +55,71 @@ const protectedRoutes: ProtectedRoutesConfig = {
 import localFont from "next/font/local";
 
 const heading = localFont({
-  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
+  src: [
+    {
+      path: "../../public/fonts/regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/black.woff2",
+      weight: "900",
+      style: "normal",
+    },
+  ],
   variable: "--font-heading",
   display: "swap",
 });
 
 const body = localFont({
-  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
+  src: [
+    {
+      path: "../../public/fonts/regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/black.woff2",
+      weight: "900",
+      style: "normal",
+    },
+  ],
   variable: "--font-body",
   display: "swap",
 });
 
 const label = localFont({
-  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
+  src: [
+    {
+      path: "../../public/fonts/regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
   variable: "--font-label",
   display: "swap",
 });
 
 const code = localFont({
-  src: "../../public/fonts/FKGroteskNeue-Regular.woff2",
+  src: "../../public/fonts/regular.woff2",
   variable: "--font-code",
   display: "swap",
+  weight: "400",
 });
 
 const fonts: FontsConfig = {

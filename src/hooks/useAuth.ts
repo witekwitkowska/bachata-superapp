@@ -1,5 +1,6 @@
 "use client";
 
+import { handlePost } from "@/lib/fetch";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -68,18 +69,18 @@ export function useAuth() {
   }) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
+      const { success, error } = await handlePost(
+        "/api/auth/register",
+        userData,
+        "Registration failed"
+      );
 
-      const data = await response.json();
+      if (!success) {
+        throw new Error(error || "Registration failed");
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || "Registration failed");
+      if (!success) {
+        throw new Error(error || "Registration failed");
       }
 
       // Auto-login after successful registration
@@ -102,21 +103,17 @@ export function useAuth() {
   }) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(passwordData),
-      });
+      const { success, error, message } = await handlePost(
+        "/api/auth/change-password",
+        passwordData,
+        "Password change failed"
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Password change failed");
+      if (!success) {
+        throw new Error(error || "Password change failed");
       }
 
-      return { success: true, message: data.message };
+      return { success: true, message: message };
     } catch (error) {
       return {
         success: false,

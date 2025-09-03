@@ -10,13 +10,15 @@ import type { Post } from "@/types/post.types";
 import { toast } from "sonner";
 import { Session } from "next-auth";
 import { MasonryGrid } from "@once-ui-system/core";
+import { handleDelete, handleFetch, handlePost } from "@/lib/fetch";
 
 interface PostsFeedProps {
     className?: string;
     session: Session;
+    isMobile?: boolean;
 }
 
-export function PostsFeed({ className, session }: PostsFeedProps) {
+export function PostsFeed({ className, session, isMobile }: PostsFeedProps) {
     const [posts, setPosts] = useState<(Post & { authorProfileImage: string, authorName: string, authorEmail: string })[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -24,12 +26,11 @@ export function PostsFeed({ className, session }: PostsFeedProps) {
 
     const fetchPosts = async () => {
         try {
-            const response = await fetch("/api/posts");
-            const result = await response.json();
+            const { data, success } = await handleFetch("/api/posts");
 
-            if (result.success) {
+            if (success) {
                 // Add author information to posts
-                const postsWithAuthor = result.data.map((post: Post & { authorProfileImage: string, authorName: string, authorEmail: string }) => ({
+                const postsWithAuthor = data.map((post: Post & { authorProfileImage: string, authorName: string, authorEmail: string }) => ({
                     ...post,
                 }));
                 setPosts(postsWithAuthor);
@@ -58,14 +59,17 @@ export function PostsFeed({ className, session }: PostsFeedProps) {
     const handleReaction = async (postId: string, reactionType: "lightning" | "fire" | "ice") => {
         try {
             // For now, we'll just show a toast since we don't have user authentication
-            toast.success(`You reacted with ${reactionType}!`);
-
-            // In a real app, you would make an API call to update the reaction
-            // const response = await fetch(`/api/posts/${postId}/react`, {
-            //   method: "POST",
-            //   headers: { "Content-Type": "application/json" },
-            //   body: JSON.stringify({ reactionType, userId: "current-user-id" }),
-            // });
+            if (session?.user?.id) {
+                const { success, error } = await handlePost(`/api/posts/${postId}/react`, {
+                    reactionType,
+                    userId: session.user.id,
+                });
+                if (success) {
+                    toast.success(`You reacted with ${reactionType}!`);
+                } else {
+                    toast.error(error || "Failed to add reaction");
+                }
+            }
         } catch (error) {
             toast.error("Failed to add reaction");
             console.error("Error adding reaction:", error);
@@ -74,17 +78,13 @@ export function PostsFeed({ className, session }: PostsFeedProps) {
 
     const handleDeletePost = async (postId: string) => {
         try {
-            const response = await fetch(`/api/posts/${postId}`, {
-                method: "DELETE",
-            });
+            const { success, error } = await handleDelete(`/api/posts/${postId}`, "Failed to delete post");
 
-            const result = await response.json();
-
-            if (result.success) {
+            if (success) {
                 toast.success("Post deleted successfully!");
                 fetchPosts(); // Refresh the posts list
             } else {
-                toast.error(result.error || "Failed to delete post");
+                toast.error(error || "Failed to delete post");
             }
         } catch (error) {
             toast.error("An error occurred while deleting the post");
@@ -128,7 +128,7 @@ export function PostsFeed({ className, session }: PostsFeedProps) {
     }
 
     return (
-        <div className={`w-full space-y-6 ${className}`}>
+        <div className={`w-full space-y-6 ${className ? className : ""}`}>
             <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                     <h2 className="text-2xl font-bold">Posts</h2>
@@ -162,7 +162,7 @@ export function PostsFeed({ className, session }: PostsFeedProps) {
                 </div>
             ) : (
                 <div className="w-full space-y-6">
-                    <MasonryGrid columns={3}>
+                    <MasonryGrid columns={isMobile ? 1 : 3}>
                         {posts.map((post) => (
                             <PostCard
                                 key={post.id}

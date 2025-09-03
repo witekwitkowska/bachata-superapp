@@ -1,4 +1,4 @@
-"use client";
+"use client";;
 import { useState, useCallback, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Upload, X, Image as ImageIcon, Crown, GripVertical } from "lucide-react";
@@ -157,14 +157,12 @@ export function ImageUploadWithPreview({
                     method: 'POST',
                     body: formData,
                 });
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error(result.message || 'Upload failed');
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || 'Upload failed');
                 }
 
-                return result.data;
+                return data.data;
             });
 
             const uploadedResults = await Promise.all(uploadPromises);

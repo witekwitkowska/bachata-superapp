@@ -33,10 +33,17 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
           return routes[pathname as keyof typeof routes];
         }
 
-        const dynamicRoutes = ["/blog", "/work"] as const;
-        for (const route of dynamicRoutes) {
-          if (pathname?.startsWith(route) && routes[route]) {
-            return true;
+        // Check for dynamic routes (routes with brackets like [id], [slug], etc.)
+        for (const routeKey in routes) {
+          if (routes[routeKey as keyof typeof routes]) {
+            // Convert dynamic route pattern to regex
+            // e.g., "/profile/[userId]" becomes "/profile/[^/]+"
+            const dynamicPattern = routeKey.replace(/\[([^\]]+)\]/g, '[^/]+');
+            const regex = new RegExp(`^${dynamicPattern}$`);
+
+            if (regex.test(pathname)) {
+              return true;
+            }
           }
         }
 

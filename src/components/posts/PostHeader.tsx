@@ -7,6 +7,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Calendar, MapPin, MoreHorizontal, Trash2 } from "lucide-react";
 import type { Post } from "@/types/post.types";
 import { formatDistanceToNow } from "date-fns";
+import Link from "next/link";
+import { getInitials } from "@/lib/utils";
 
 interface PostHeaderProps {
     post: Post & { authorProfileImage: string, authorName: string, authorEmail: string };
@@ -14,14 +16,6 @@ interface PostHeaderProps {
 }
 
 export function PostHeader({ post, onDelete }: PostHeaderProps) {
-    const getInitials = (name: string) => {
-        return name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2);
-    };
 
     const formatDate = (dateString: string) => {
         try {
@@ -42,12 +36,17 @@ export function PostHeader({ post, onDelete }: PostHeaderProps) {
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-                <Avatar className="h-10 w-10">
-                    {post.authorProfileImage && <AvatarImage src={post.authorProfileImage} alt={`Author ${post.authorName}`} />}
-                    {post.authorName && <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>}
-                </Avatar>
+                <Link href={`/profile/${post.authorId}`} className="hover:opacity-80 transition-opacity">
+                    <Avatar className="h-10 w-10 cursor-pointer">
+                        {post.authorProfileImage && <AvatarImage src={post.authorProfileImage} alt={`Author ${post.authorName}`} />}
+                        {post.authorName && <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>}
+                        getInitials
+                    </Avatar>
+                </Link>
                 <div>
-                    <p className="font-semibold text-sm">{post.authorName}</p>
+                    <Link href={`/profile/${post.authorId}`} className="hover:text-primary transition-colors">
+                        <p className="font-semibold text-sm cursor-pointer">{post.authorName}</p>
+                    </Link>
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         <span>{formatDate(post.createdAt)}</span>

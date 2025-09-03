@@ -17,7 +17,7 @@ const config = {
     console.log("beforeCreate", data);
     try {
       const { db } = await connectToDatabase();
-      console.log(data);
+
       const user = await db.collection("users").findOne({
         _id: new ObjectId(String(data.authorId)),
       });

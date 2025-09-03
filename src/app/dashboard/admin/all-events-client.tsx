@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { EventForm } from "./event-form";
 import type { Event } from "@/types";
 import type { ColumnDef } from "@tanstack/react-table";
+import { handleFetch, handlePut, handleDelete } from "@/lib/fetch";
 
 interface AllEventsClientProps {
     initialEvents: Event[];
@@ -21,26 +22,21 @@ export function AllEventsClient({ initialEvents }: AllEventsClientProps) {
 
     const fetchEvents = async () => {
         try {
-            const response = await fetch("/api/events");
-            const data = await response.json();
-            if (data.success) {
-                setEvents(data.data);
+            const { data, success } = await handleFetch("/api/events", "Failed to fetch events");
+            if (success) {
+                setEvents(data);
             }
         } catch (error) {
             console.error("Error fetching events:", error);
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDeleteEvent = async (id: string) => {
         if (!confirm("Are you sure you want to delete this event?")) return;
 
         try {
-            const response = await fetch(`/api/events/${id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
-                fetchEvents();
-            }
+            await handleDelete(`/api/events/${id}`, "Failed to delete event");
+            fetchEvents();
         } catch (error) {
             console.error("Error deleting event:", error);
         }
@@ -59,15 +55,9 @@ export function AllEventsClient({ initialEvents }: AllEventsClientProps) {
 
             const method = editingEvent ? "PATCH" : "POST";
 
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
+            const response = await handlePut(url, formData, "Failed to save event");
 
-            if (response.ok) {
+            if (response.success) {
                 setIsDialogOpen(false);
                 setEditingEvent(null);
                 fetchEvents();
@@ -149,7 +139,7 @@ export function AllEventsClient({ initialEvents }: AllEventsClientProps) {
                         <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDelete(event.id)}
+                            onClick={() => handleDeleteEvent(event.id)}
                         >
                             Delete
                         </Button>
@@ -170,7 +160,7 @@ export function AllEventsClient({ initialEvents }: AllEventsClientProps) {
                     <DialogTrigger asChild>
                         <Button>Add New Event</Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent>
                         <DialogHeader>
                             <DialogTitle>
                                 {editingEvent ? "Edit" : "Add New"} Event

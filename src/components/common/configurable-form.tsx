@@ -10,6 +10,7 @@ import { forwardRef, useImperativeHandle, useMemo, useRef, useCallback, useState
 import MultiSelector from "@/components/common/multi-selector";
 import Selector from "@/components/common/selector";
 import { getZodRequiredFields } from "@/lib/utils";
+import { extractSchemaDefaults } from "@/utils";
 import { CompactInput } from "@/components/ui/compact-input";
 import { StatefulButton, StatefulButtonRef } from "../ui/stateful-button";
 import { Switch } from "@/components/ui/switch";
@@ -22,7 +23,7 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     endpoint: string;
     entityName: string;
     displayNames: Record<string, string>;
-    defaultValues: z.infer<T>;
+    defaultValues?: z.infer<T>;
     buttonTitle?: string;
     headerTitle?: string;
     loadingTitle?: string;
@@ -85,9 +86,21 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     // Define the form data type
     type FormData = z.infer<T>;
 
+    // Automatically extract default values from schema if none provided
+    const computedDefaultValues = useMemo(() => {
+        if (defaultValues) {
+            return defaultValues;
+        }
+
+        // Extract defaults from schema
+        const schemaDefaults = extractSchemaDefaults(formSchema);
+        console.log('Auto-extracted schema defaults:', schemaDefaults);
+        return schemaDefaults;
+    }, [defaultValues, formSchema]);
+
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema) as any,
-        defaultValues: defaultValues as DefaultValues<FormData>,
+        defaultValues: computedDefaultValues as DefaultValues<FormData>,
         mode: 'onChange'
     });
 
@@ -268,6 +281,8 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
 
     const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading || isUploading;
 
+
+
     return (
         <div className={containerClassName}>
             <Form {...form}>
@@ -287,10 +302,11 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                         }
                     })}
                 >
-                    {Object.keys(defaultValues).filter(fieldKey =>
+                    {Object.keys(computedDefaultValues).filter(fieldKey =>
                         !exclusionList?.includes(fieldKey) &&
                         !autoDetectedLists.objectFields.includes(fieldKey)
                     ).map((fieldKey) => {
+
 
                         return (
                             <FormField
@@ -301,7 +317,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                     finalSelectorList?.includes(fieldKey) ? (
                                         <FormItem className="space-y-0">
                                             <FormLabel>
-                                                {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                {`${displayNames[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                             </FormLabel>
 
 
@@ -318,120 +334,10 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
-                                    ) : finalArrayList?.includes(fieldKey) ? (
-                                        <FormItem>
-                                            <FormLabel>
-                                                {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <MultiSelector
-                                                    options={optionsMap?.[fieldKey] || extractOptionsFromSchema(fieldKey)}
-                                                    setSelected={(value) => {
-                                                        field.onChange(value)
-                                                        form.trigger(fieldKey as Path<FormData>)
-                                                    }}
-                                                    selected={field.value as string[]}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    ) : finalSwitchList?.includes(fieldKey) ? (
-                                        <FormItem className="flex flex-col">
-                                            <FormLabel>
-                                                {`${displayNames[fieldKey]}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Switch
-                                                    checked={field.value as boolean}
-                                                    onCheckedChange={field.onChange}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    ) : finalNumericList?.includes(fieldKey) ? (
-                                        <FormItem>
-                                            <FormControl>
-                                                <CompactInput
-                                                    label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                                    {...field}
-                                                    type="number"
-                                                    step="any"
-                                                    placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
-                                                    value={field.value as string | number}
-                                                    onChange={(e) => {
-                                                        // Clear field error when user starts typing
-                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
-                                                            form.clearErrors(fieldKey as Path<FormData>);
-                                                        }
-                                                        // Convert string to number for numeric fields
-                                                        const numValue = e.target.value === '' ? '' : Number(e.target.value);
-                                                        field.onChange(numValue);
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    ) : dateTimeList?.includes(fieldKey) ? (
-                                        <FormItem>
-                                            <FormLabel>
-                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <DateTimePicker
-                                                    value={field.value as Date | string}
-                                                    onChange={(value) => {
-                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
-                                                            form.clearErrors(fieldKey as Path<FormData>);
-                                                        }
-                                                        field.onChange(value);
-                                                    }}
-                                                    placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    ) : dateOnlyList?.includes(fieldKey) ? (
-                                        <FormItem>
-                                            <FormLabel>
-                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <DatePicker
-                                                    value={field.value as Date | string}
-                                                    onChange={(value) => {
-                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
-                                                            form.clearErrors(fieldKey as Path<FormData>);
-                                                        }
-                                                        field.onChange(value);
-                                                    }}
-                                                    placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    ) : finalDateList?.includes(fieldKey) ? (
-                                        <FormItem>
-                                            <FormLabel>
-                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
-                                            </FormLabel>
-                                            <FormControl>
-                                                <DatePicker
-                                                    value={field.value as Date | string}
-                                                    onChange={(value) => {
-                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
-                                                            form.clearErrors(fieldKey as Path<FormData>);
-                                                        }
-                                                        field.onChange(value);
-                                                    }}
-                                                    placeholder={`Select ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
                                     ) : imagesList?.includes(fieldKey) ? (
-                                        <FormItem>
+                                        <FormItem className="col-span-2">
                                             <FormLabel>
-                                                {`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                {`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                             </FormLabel>
                                             <FormControl>
                                                 <ImageUploadWithPreview
@@ -456,6 +362,116 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
+                                    ) : finalArrayList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <MultiSelector
+                                                    options={optionsMap?.[fieldKey] || extractOptionsFromSchema(fieldKey)}
+                                                    setSelected={(value) => {
+                                                        field.onChange(value)
+                                                        form.trigger(fieldKey as Path<FormData>)
+                                                    }}
+                                                    selected={field.value as string[]}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalSwitchList?.includes(fieldKey) ? (
+                                        <FormItem className="flex flex-col">
+                                            <FormLabel>
+                                                {`${displayNames[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Switch
+                                                    checked={field.value as boolean}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalNumericList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormControl>
+                                                <CompactInput
+                                                    label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                    {...field}
+                                                    type="number"
+                                                    step="any"
+                                                    placeholder={`Ingresa ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}`}
+                                                    value={field.value as string | number}
+                                                    onChange={(e) => {
+                                                        // Clear field error when user starts typing
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        // Convert string to number for numeric fields
+                                                        const numValue = e.target.value === '' ? '' : Number(e.target.value);
+                                                        field.onChange(numValue);
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : dateTimeList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <DateTimePicker
+                                                    value={field.value as Date | string}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    placeholder={`Select ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : dateOnlyList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    value={field.value as Date | string}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    placeholder={`Select ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : finalDateList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <DatePicker
+                                                    value={field.value as Date | string}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    placeholder={`Select ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}`}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
                                     ) : (
                                         <FormItem>
                                             <FormControl>
@@ -463,7 +479,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                                     label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                                     {...field}
                                                     {...(passwordList?.includes(fieldKey) ? { type: 'password' } : {})}
-                                                    placeholder={`Ingresa ${displayNames ? displayNames[fieldKey]?.toLowerCase() : fieldKey}`}
+                                                    placeholder={`Ingresa ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}`}
                                                     value={field.value as string}
                                                     onChange={(e) => {
                                                         // Clear field error when user starts typing

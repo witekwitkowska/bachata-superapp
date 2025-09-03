@@ -1,3 +1,4 @@
+import { handleFetch } from "@/lib/fetch";
 import { useCallback, useRef } from "react";
 
 interface UseTableRefreshOptions<T> {
@@ -17,16 +18,15 @@ export function useTableRefresh<T>({
 
   const refreshTable = useCallback(async () => {
     try {
-      const response = await fetch(endpoint);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.status}`);
+      const { data, success, error } = await handleFetch(endpoint);
+      if (!success) {
+        throw new Error(`Failed to fetch data: ${error}`);
       }
 
-      const result = await response.json();
-      if (result.success && result.data) {
-        onRefresh?.(result.data);
+      if (success && data) {
+        onRefresh?.(data);
       } else {
-        throw new Error(result.error || "Failed to fetch data");
+        throw new Error(error || "Failed to fetch data");
       }
     } catch (error) {
       console.error("Error refreshing table:", error);

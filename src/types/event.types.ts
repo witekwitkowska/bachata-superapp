@@ -20,12 +20,16 @@ export interface BaseEvent {
   type: "social" | "festival" | "private-session" | "workshop";
   isPaid: boolean;
   locationId: string;
+  location?: Location; // Populated during creation
   price?: number;
   currency?: string;
   maxAttendees?: number;
   published: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  images?: string[]; // Added for image support
+  rating?: number; // Added for rating support
+  teacher?: any; // Added for teacher reference
 }
 
 export interface SocialEvent extends BaseEvent {

@@ -10,9 +10,10 @@ import {
     privateSessionSchema,
     workshopSchema,
 } from "@/lib/zod";
-import { formatFieldName, getSchemaFields } from "@/utils";
+import { formatFieldName, getSchemaFields, extractSchemaDefaults } from "@/utils";
 import type { Event } from "@/types";
 import type { z } from "zod";
+import { handleFetch } from "@/lib/fetch";
 
 interface EventFormProps {
     eventType: string;
@@ -39,11 +40,9 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
 
     const fetchLocations = async () => {
         try {
-            const response = await fetch("/api/locations");
-            const data = await response.json();
-            console.log(data, 'data');
-            if (data.success) {
-                setLocations(data.data);
+            const { data, success } = await handleFetch("/api/locations", "Failed to fetch locations");
+            if (success) {
+                setLocations(data);
             }
         } catch (error) {
             console.error("Error fetching locations:", error);
@@ -52,11 +51,9 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch("/api/users");
-            const data = await response.json();
-            console.log(data, 'users');
-            if (data.success) {
-                setUsers(data.data);
+            const { data, success } = await handleFetch("/api/users", "Failed to fetch users");
+            if (success) {
+                setUsers(data);
             }
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -92,6 +89,8 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
             displayNames[field] = formatFieldName(field);
         }
 
+        console.log('Display names generated:', displayNames);
+        console.log('Schema fields:', schemaFields);
         return displayNames;
     };
 
@@ -140,42 +139,39 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
         // Get the schema for the current event type
         const schema = getSchema();
 
-        try {
-            // Parse with minimal data including the required 'type' field
-            const baseDefaults = schema.parse({ type: eventType });
+        // Extract default values from schema
+        const schemaDefaults = extractSchemaDefaults(schema);
 
-            // Override with initial data if provided
-            if (initialData) {
-                return {
-                    ...baseDefaults,
-                    ...initialData,
-                };
-            }
+        // Override with initial data if provided
+        if (initialData) {
+            // Only include fields that exist in the schema
+            const schemaKeys = Object.keys(schema.shape);
+            const filteredInitialData = Object.keys(initialData).reduce((acc, key) => {
+                if (schemaKeys.includes(key)) {
+                    acc[key] = (initialData as any)[key];
+                }
+                return acc;
+            }, {} as Record<string, any>);
 
-            return baseDefaults;
-        } catch (error) {
-            console.error("Error getting schema defaults:", error);
-            // Fallback to basic defaults if schema parsing fails
-            const fallbackDefaults = {
-                title: "",
-                description: "",
-                time: new Date(),
-                isPaid: false,
-                locationId: "",
-                published: false,
-                price: 0,
-                currency: "USD",
+            const finalDefaults = {
+                ...schemaDefaults,
+                ...filteredInitialData,
             };
 
-            if (initialData) {
-                return {
-                    ...fallbackDefaults,
-                    ...initialData,
-                };
+            // Ensure date fields are proper Date objects
+            if ((finalDefaults as any).startDate && typeof (finalDefaults as any).startDate === 'string') {
+                (finalDefaults as any).startDate = new Date((finalDefaults as any).startDate);
+            }
+            if ((finalDefaults as any).endDate && typeof (finalDefaults as any).endDate === 'string') {
+                (finalDefaults as any).endDate = new Date((finalDefaults as any).endDate);
             }
 
-            return fallbackDefaults;
+            console.log('Final defaults with initial data:', finalDefaults);
+            return finalDefaults;
         }
+
+        console.log('Schema defaults:', schemaDefaults);
+        return schemaDefaults;
     };
 
     return (
@@ -185,14 +181,16 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
                 endpoint={initialData ? `/events/${initialData.id}` : '/events'}
                 entityName="event"
                 displayNames={getDisplayNames()}
-                defaultValues={getDefaultValues()}
+                defaultValues={initialData ? getDefaultValues() : undefined}
                 buttonTitle={initialData ? "Update Event" : "Create Event"}
                 headerTitle={`${initialData ? "Edit" : "Add New"} ${eventType.charAt(0).toUpperCase() + eventType.slice(1)}`}
                 loadingTitle="Saving..."
                 exclusionList={["type"]}
                 optionsMap={getOptionsMap()}
-                dateList={["time", "startDate", "endDate"]}
-                className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
+                imagesList={["images"]}
+                dateOnlyList={["startDate", "endDate"]}
+                className="grid gap-4 md:grid-cols-[repeat(auto-fill,minmax(100px,1fr))] overflow-x-scroll"
+                endpointType={initialData ? "PATCH" : "POST"}
                 onFormSuccess={onFormSuccess}
             />
 

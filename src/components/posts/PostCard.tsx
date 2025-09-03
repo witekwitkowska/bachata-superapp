@@ -23,7 +23,7 @@ export function PostCard({ post, onReaction, onDelete, className }: PostCardProp
 
             <CardContent className="space-y-4">
                 {/* Caption */}
-                <p className="text-sm leading-relaxed">{post.caption}</p>
+                <p className="text-sm leading-relaxed pb-8">{post.caption}</p>
 
                 {/* Tags */}
                 <PostTags tags={post.tags || []} />

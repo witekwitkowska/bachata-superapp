@@ -1,5 +1,5 @@
 export interface UserProfile {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   bio?: string;
@@ -10,4 +10,10 @@ export interface UserProfile {
   banners?: string[];
   avatars?: string[];
   isPublic?: boolean;
+  role?: string;
+  isTeacher?: boolean;
+  createdAt?: string;
+  postsCount?: number;
+  followersCount?: number;
+  followingCount?: number;
 }
