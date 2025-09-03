@@ -72,6 +72,10 @@ export async function getUserProfile(userId: string) {
       }
     }
 
+    // Convert ObjectId to string for consistency
+    if (profile && profile._id) {
+      (profile as any)._id = profile._id.toString();
+    }
     return profile;
   } catch (error) {
     console.error("Get user profile error:", error);

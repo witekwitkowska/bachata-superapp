@@ -29,11 +29,8 @@ export function PostsFeed({ className, session }: PostsFeedProps) {
 
             if (result.success) {
                 // Add author information to posts
-                const postsWithAuthor = result.data.map((post: Post) => ({
+                const postsWithAuthor = result.data.map((post: Post & { authorProfileImage: string, authorName: string, authorEmail: string }) => ({
                     ...post,
-                    authorProfileImage: "",
-                    authorName: session.user?.name || "Anonymous User",
-                    authorEmail: session.user?.email || "",
                 }));
                 setPosts(postsWithAuthor);
             } else {

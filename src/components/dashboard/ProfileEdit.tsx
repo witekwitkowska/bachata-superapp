@@ -79,7 +79,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                         <ConfigurableForm
                             className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(200px,1fr))] items-end"
                             formSchema={userEditSchema}
-                            endpoint={`/users/${profile._id}`}
+                            endpoint={`users/${profile._id}`}
                             endpointType="PATCH"
                             entityName="user"
                             displayNames={{
@@ -93,17 +93,15 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                             }}
                             selectorList={["bachataLevel"]}
                             optionsMap={editProfileOptionsMap}
-                            defaultValues={
-                                {
-                                    name: profile?.name || "",
-                                    email: profile?.email || "",
-                                    bio: profile?.bio || "",
-                                    location: profile?.location || "",
-                                    website: profile?.website || "",
-                                    bachataLevel: profile?.bachataLevel || "",
-                                    isPublic: profile?.isPublic || false,
-                                }
-                            }
+                            defaultValues={{
+                                name: profile?.name || "",
+                                email: profile?.email || "",
+                                bio: profile?.bio || "",
+                                location: profile?.location || "",
+                                website: profile?.website || "",
+                                bachataLevel: profile?.bachataLevel || "beginner",
+                                isPublic: profile?.isPublic || false,
+                            }}
                             switchList={["isPublic"]}
                             extraData={{
                                 id: profile._id.toString(),
@@ -123,7 +121,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
                     <CardContent className="p-6">
                         <FormWrapper
                             ref={formWrapperRef}
-                            endpoint={`/users/${profile._id}`}
+                            endpoint={`users/${profile._id}`}
                             endpointType="PATCH"
                             entityName="user"
                             buttonTitle="Save"

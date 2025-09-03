@@ -204,8 +204,9 @@ export const userEditSchema = z.object({
   email: emailValidation,
   bio: z.string().default("").optional(),
   location: z.string().default("").optional(),
-  website: z.url().default("").optional(),
+  website: z.string().default("").optional(),
   bachataLevel: z.string().default("beginner").optional(),
+  isPublic: z.boolean().default(false).optional(),
   // avatar: z.string().optional(),
   //date of birth
 });

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { EventAdminPage } from "../event-admin-page";
 import type { Event } from "@/types";
 import { serverFetch } from "@/lib/server-fetch";
+import { baseUrl } from "@/lib/utils";
 
 export default async function FestivalsPage() {
     const session = await auth();
@@ -16,7 +17,7 @@ export default async function FestivalsPage() {
     }
 
     // Fetch events on the server side
-    const result = await serverFetch("/api/events?type=festival", "Failed to fetch festival events");
+    const result = await serverFetch(`${baseUrl}/api/events?type=festival`, "Failed to fetch festival events");
     const events = result.success ? result.data : [];
 
     return (

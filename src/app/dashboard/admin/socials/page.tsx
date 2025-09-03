@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { EventAdminPage } from "../event-admin-page";
 import { serverFetch } from "@/lib/server-fetch";
 import type { Event } from "@/types";
+import { baseUrl } from "@/lib/utils";
 
 export default async function SocialsPage() {
     const session = await auth();
@@ -16,7 +17,7 @@ export default async function SocialsPage() {
     }
 
     // Fetch events through API route (handles serialization)
-    const result = await serverFetch("/api/events?type=social", "Failed to fetch social events");
+    const result = await serverFetch(`${baseUrl}/api/events?type=social`, "Failed to fetch social events");
     const events = result.success ? result.data : [];
 
     return (

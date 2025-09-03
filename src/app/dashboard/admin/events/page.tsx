@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AllEventsClient } from "../all-events-client";
 import type { Event } from "@/types";
 import { serverFetch } from "@/lib/server-fetch";
+import { baseUrl } from "@/lib/utils";
 
 export default async function AllEventsPage() {
     const session = await auth();
@@ -15,7 +16,7 @@ export default async function AllEventsPage() {
         redirect("/dashboard");
     }
 
-    const result = await serverFetch("/api/events", "Failed to fetch events");
+    const result = await serverFetch(`${baseUrl}/api/events`, "Failed to fetch events");
     const events = result.success ? result.data : [];
 
     return <AllEventsClient initialEvents={events as Event[]} />;

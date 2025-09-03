@@ -43,7 +43,7 @@ export function PostHeader({ post, onDelete }: PostHeaderProps) {
         <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
                 <Avatar className="h-10 w-10">
-                    {post.authorProfileImage && <AvatarImage src={post.authorProfileImage} alt="Author" />}
+                    {post.authorProfileImage && <AvatarImage src={post.authorProfileImage} alt={`Author ${post.authorName}`} />}
                     {post.authorName && <AvatarFallback>{getInitials(post.authorName)}</AvatarFallback>}
                 </Avatar>
                 <div>
