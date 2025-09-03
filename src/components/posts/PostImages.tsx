@@ -74,19 +74,19 @@ export function PostImages({ images }: PostImagesProps) {
                     {fullscreenImage && (
                         <motion.div
                             className="fixed inset-0 z-50 flex items-center justify-center"
-                            initial={{ opacity: 0 }}
+                            initial={{ opacity: 1 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
+                            transition={{ type: "spring", damping: 40, stiffness: 280 }}
                             onClick={closeFullscreenImage}
                         >
                             {/* Blurred Background */}
                             <motion.div
                                 className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                                initial={{ opacity: 0 }}
+                                initial={{ opacity: 1 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 1 }}
-                                transition={{ duration: 0.3 }}
+                                transition={{ type: "spring", damping: 40, stiffness: 280 }}
                             />
 
                             {/* Close Button */}
@@ -122,12 +122,7 @@ export function PostImages({ images }: PostImagesProps) {
                                     width: fullscreenImage.rect.width,
                                     height: fullscreenImage.rect.height,
                                 }}
-                                transition={{
-                                    type: "spring",
-                                    damping: 25,
-                                    stiffness: 300,
-                                    duration: 0.4,
-                                }}
+                                transition={{ type: "spring", damping: 40, stiffness: 280 }}
                                 onClick={(e) => e.stopPropagation()}
                             />
                         </motion.div>
