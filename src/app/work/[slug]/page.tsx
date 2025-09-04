@@ -4,15 +4,12 @@ import {
   Meta,
   Schema,
   AvatarGroup,
-  Button,
   Column,
-  Flex,
   Heading,
   Media,
   Text,
   SmartLink,
   Row,
-  Avatar,
   Line,
 } from "@once-ui-system/core";
 import { baseURL, about, person, work } from "@/resources";
@@ -127,7 +124,7 @@ export default async function Project({
       <Column fillWidth gap="40" horizontal="center" marginTop="40">
         <Line maxWidth="40" />
         <Heading as="h2" variant="heading-strong-xl" marginBottom="24">
-          Related projects
+          Related features
         </Heading>
         <Projects exclude={[post.slug]} range={[2]} />
       </Column>

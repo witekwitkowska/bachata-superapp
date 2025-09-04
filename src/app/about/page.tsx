@@ -1,20 +1,7 @@
-import {
-  Heading,
-  Text,
-  Button,
-  Avatar,
-  RevealFx,
-  Column,
-  Badge,
-  Row,
-  Schema,
-  Meta,
-  Line,
-} from "@once-ui-system/core";
-import { home, about, person, baseURL, routes } from "@/resources";
+import { Heading, Text, Button, Avatar, RevealFx, Column, Badge, Row, Schema, Meta } from "@once-ui-system/core";
+import { home, about, person, baseURL } from "@/resources";
 import { Mailchimp } from "@/components";
 import { Projects } from "@/components/work/Projects";
-import { Posts } from "@/components/blog/Posts";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -103,7 +90,7 @@ export default function About() {
       <RevealFx translateY="16" delay={0.6}>
         <Projects range={[1, 1]} />
       </RevealFx>
-      {routes["/blog"] && (
+      {/* {routes["/blog"] && (
         <Column fillWidth gap="24" marginBottom="l">
           <Row fillWidth paddingRight="64">
             <Line maxWidth={48} />
@@ -122,7 +109,7 @@ export default function About() {
             <Line maxWidth={48} />
           </Row>
         </Column>
-      )}
+      )} */}
       <Projects range={[2]} />
       <Mailchimp />
     </Column>

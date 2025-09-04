@@ -16,6 +16,7 @@ import {
 } from "@once-ui-system/core";
 import { Footer, Header, RouteGuard, Providers } from "@/components";
 import { baseURL, effects, fonts, style, dataStyle, home } from "@/resources";
+import { auth } from "@/auth";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -32,6 +33,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <Flex
       suppressHydrationWarning
@@ -180,7 +182,7 @@ export default async function RootLayout({
             />
           </RevealFx>
           <Flex fillWidth minHeight="16" s={{ hide: true }} />
-          <Header />
+          <Header session={session} />
           <Flex zIndex={0} fillWidth padding="l" horizontal="center" flex={1}>
             <Flex horizontal="center" fillWidth minHeight="0">
               <RouteGuard>{children}</RouteGuard>

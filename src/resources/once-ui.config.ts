@@ -18,7 +18,7 @@ const baseURL: string = "https://bachata-app.com";
 const routes: RoutesConfig = {
   "/": true,
   "/about": true,
-  "/work": true,
+  "/work/[project]": true,
   "/blog": true,
   "/posts": true,
   "/auth/signin": true,
@@ -253,9 +253,9 @@ const schema: SchemaConfig = {
 
 // social links
 const sameAs: SameAsConfig = {
-  threads: "https://www.threads.com/@once_ui",
+  threads: "https://www.threads.net/@jose_canizares",
   linkedin: "https://www.linkedin.com/in/jose-canizares/",
-  discord: "https://discord.com/invite/5EyAQ4eNdS",
+  discord: "https://discord.gg/bachata-community",
 };
 
 export {

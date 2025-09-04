@@ -2,13 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { Session } from "next-auth";
 import { User, LogIn, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { Fade, Flex, Line, Row, ToggleButton } from "@once-ui-system/core";
 
-import { routes, display, person, about, blog, work, posts } from "@/resources";
+import { routes, display, person, about, posts } from "@/resources";
 import { ThemeToggle } from "./ThemeToggle";
 import styles from "./Header.module.scss";
 
@@ -45,16 +46,7 @@ const TimeDisplay: React.FC<TimeDisplayProps> = ({ timeZone, locale = "en-GB" })
 
 export default TimeDisplay;
 
-const AuthControls = () => {
-  const { data: session, status } = useSession();
-
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center w-10 h-10 bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 rounded-lg">
-        <div className="w-4 h-4 border-2 border-neutral-800 dark:border-neutral-200 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+const AuthControls = ({ session }: { session: Session | null }) => {
 
   if (session?.user) {
     return (
@@ -119,7 +111,6 @@ const AnimatedToggleButton = ({
   const buttonRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = () => {
-    console.log("handleMouseEnter", itemKey);
     setTextHoverState({
       y: 0,
       opacity: 1,
@@ -133,7 +124,6 @@ const AnimatedToggleButton = ({
 
 
   const handleMouseLeave = () => {
-    console.log("handleMouseLeave", itemKey);
     setTextHoverState({
       y: distance,
       opacity: 0,
@@ -170,6 +160,9 @@ const AnimatedToggleButton = ({
         }}
       >
         <ToggleButton
+          style={{
+            backgroundColor: "transparent",
+          }}
           prefixIcon={prefixIcon}
           href={href}
           label={label}
@@ -193,6 +186,9 @@ const AnimatedToggleButton = ({
         }}
       >
         <ToggleButton
+          style={{
+            backgroundColor: "transparent",
+          }}
           prefixIcon={prefixIcon}
           href={href}
           label={label}
@@ -203,7 +199,7 @@ const AnimatedToggleButton = ({
   );
 };
 
-export const Header = () => {
+export const Header = ({ session }: { session: Session | null }) => {
   const pathname = usePathname() ?? "";
   const navRef = useRef<HTMLDivElement>(null);
 
@@ -282,7 +278,7 @@ export const Header = () => {
           >
             {/* Animated hover background using state */}
             <motion.div
-              className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800 rounded-xl h-[calc(100%-8px)] top-4"
+              className="absolute inset-0 bg-muted rounded-xl h-[calc(100%-8px)] top-4"
               animate={hoverState}
               style={{
                 zIndex: -1,
@@ -331,7 +327,7 @@ export const Header = () => {
                   </Row>
                 </>
               )}
-              {routes["/work"] && (
+              {/* {routes["/work"] && (
                 <>
                   <Row s={{ hide: true }}>
                     <AnimatedToggleButton
@@ -380,7 +376,7 @@ export const Header = () => {
                     />
                   </Row>
                 </>
-              )}
+              )} */}
               {routes["/posts"] && (
                 <>
                   <Row s={{ hide: true }}>
@@ -426,7 +422,7 @@ export const Header = () => {
             <Flex s={{ hide: true }}>
               {display.time && <TimeDisplay timeZone={person.location} />}
             </Flex>
-            <AuthControls />
+            <AuthControls session={session} />
           </Flex>
         </Flex>
       </Row>

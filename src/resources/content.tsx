@@ -7,7 +7,7 @@ const person: Person = {
   name: "José Cañizares",
   role: "Design Engineer",
   avatar: "/images/avatar.jpg",
-  email: "example@gmail.com",
+  email: "ohmyitspoma@gmail.com",
   location: "Europe/Paris", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
   languages: ["English", "Spanish"], // optional: Leave the array empty if you don't want to display languages
 };
@@ -25,18 +25,18 @@ const social: Social = [
   {
     name: "GitHub",
     icon: "github",
-    link: "https://github.com/once-ui-system",
+    link: "https://github.com/jose31canizar",
   },
   {
     name: "LinkedIn",
     icon: "linkedin",
     link: "https://www.linkedin.com/company/once-ui/",
   },
-  {
-    name: "Threads",
-    icon: "threads",
-    link: "https://www.threads.com/@once_ui",
-  },
+  // {
+  //   name: "Threads",
+  //   icon: "threads",
+  //   link: "https://www.threads.com/@once_ui",
+  // },
   {
     name: "Email",
     icon: "email",
@@ -66,7 +66,7 @@ const home: Home = {
   },
   subline: (
     <>
-      Airbnb for bachata studios.
+      The app you've been waiting for.
     </>
   ),
 };
