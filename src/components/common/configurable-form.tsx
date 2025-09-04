@@ -300,7 +300,14 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                 <form
                     {...(className ? { className } : { className: "space-y-4" })}
                     onSubmit={form.handleSubmit(async (data) => {
-                        const mergedData = { ...data, ...extraData };
+                        // Convert null values to undefined for optional fields
+                        const cleanedData = Object.keys(data).reduce((acc, key) => {
+                            const value = (data as any)[key];
+                            acc[key] = value === null ? undefined : value;
+                            return acc;
+                        }, {} as any);
+
+                        const mergedData = { ...cleanedData, ...extraData };
                         try {
                             if (endpointType === 'PATCH') {
                                 await onPatch(mergedData);
@@ -314,18 +321,12 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                     })}
                 >
                     {(() => {
-                        console.log('ConfigurableForm - computedDefaultValues:', computedDefaultValues);
-                        console.log('ConfigurableForm - coordinatesList:', coordinatesList);
-                        console.log('ConfigurableForm - autoDetectedLists:', autoDetectedLists);
                         return Object.keys(computedDefaultValues);
                     })().filter(fieldKey => {
                         const isExcluded = exclusionList?.includes(fieldKey);
                         const isObjectField = autoDetectedLists.objectFields.includes(fieldKey);
                         const isCoordinatesField = coordinatesList?.includes(fieldKey);
                         const shouldExclude = isExcluded || (isObjectField && !isCoordinatesField);
-
-                        console.log(`Field ${fieldKey}: excluded=${isExcluded}, objectField=${isObjectField}, coordinatesField=${isCoordinatesField}, shouldExclude=${shouldExclude}`);
-
                         return !shouldExclude;
                     }).map((fieldKey) => {
 

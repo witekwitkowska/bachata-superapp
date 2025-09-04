@@ -54,7 +54,9 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
             // Ensure all schema fields are included, even if not in initialData
             const allSchemaFields: Record<string, any> = {};
             for (const fieldName of Object.keys(locationSchema.shape)) {
-                allSchemaFields[fieldName] = filteredInitialData[fieldName] ?? (schemaDefaults as any)[fieldName] ?? undefined;
+                const value = filteredInitialData[fieldName] ?? (schemaDefaults as any)[fieldName] ?? undefined;
+                // Convert null to undefined for optional fields
+                allSchemaFields[fieldName] = value === null ? undefined : value;
             }
 
             console.log('LocationForm - finalDefaults:', allSchemaFields);
@@ -77,7 +79,7 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
         <div className="space-y-6">
             <ConfigurableForm
                 formSchema={locationSchema}
-                endpoint="/locations"
+                endpoint={initialData ? `/locations/${initialData.id}` : "/locations"}
                 entityName="location"
                 endpointType={initialData ? "PATCH" : "POST"}
                 displayNames={getDisplayNames()}

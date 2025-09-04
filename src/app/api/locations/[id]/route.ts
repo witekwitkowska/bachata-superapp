@@ -1,5 +1,7 @@
 import { createCrudRoute } from "@/lib/api/crud-generator";
 import { locationSchema } from "@/lib/zod";
+import { connectToDatabase } from "@/lib/mongodb";
+import { ObjectId } from "mongodb";
 import type { z } from "zod";
 
 type LocationInput = z.infer<typeof locationSchema>;
@@ -14,6 +16,43 @@ const config = {
       ...data,
       updatedAt: new Date(),
     };
+  },
+  afterUpdate: async (
+    data: Partial<LocationInput>,
+    session: any,
+    id: string
+  ) => {
+    try {
+      const { db } = await connectToDatabase();
+
+      // Get the updated location data
+      const updatedLocation = await db
+        .collection("locations")
+        .findOne({ _id: new ObjectId(id) });
+
+      if (updatedLocation) {
+        // Update all events that have this location populated in their location object
+        const result = await db.collection("events").updateMany(
+          {
+            locationId: id,
+            "location._id": new ObjectId(id), // Events that have the location object populated
+          },
+          {
+            $set: {
+              location: updatedLocation,
+              updatedAt: new Date(),
+            },
+          }
+        );
+
+        console.log(
+          `Updated ${result.modifiedCount} events with new location data for location ${id}`
+        );
+      }
+    } catch (error) {
+      console.error("Error updating events with new location data:", error);
+      // Don't throw error to avoid breaking the location update
+    }
   },
 };
 

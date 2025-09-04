@@ -59,6 +59,12 @@ export function EventDetails({ event, session }: EventDetailsProps) {
     const [isAttending, setIsAttending] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Debug logging to see what data we have
+    console.log('EventDetails - event:', event);
+    console.log('EventDetails - event.coordinates:', event.coordinates);
+    console.log('EventDetails - event.location:', event.location);
+    console.log('EventDetails - event.location?.coordinates:', (event.location as Location)?.coordinates);
+
     const formatEventDuration = (event: Event, startDate: Date, endDate: Date) => {
         if (event.type === "private-session" && "duration" in event) {
             return `${event.duration} minutes`;
