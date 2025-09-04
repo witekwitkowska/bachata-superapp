@@ -11,29 +11,59 @@ import { toast } from "sonner";
 import { Session } from "next-auth";
 import { MasonryGrid } from "@once-ui-system/core";
 import { handleDelete, handleFetch, handlePost } from "@/lib/fetch";
+import { ChronologicalMasonry } from "./ChronologicalMasonry";
+import { DateGroupedMasonry } from "./DateGroupedMasonry";
 
 interface PostsFeedProps {
     className?: string;
     session: Session;
     isMobile?: boolean;
+    layoutType?: "chronological" | "grouped" | "standard";
+    enablePagination?: boolean;
+    postsPerPage?: number;
 }
 
-export function PostsFeed({ className, session, isMobile }: PostsFeedProps) {
+export function PostsFeed({
+    className,
+    session,
+    isMobile,
+    layoutType = "chronological",
+    enablePagination = false,
+    postsPerPage = 20
+}: PostsFeedProps) {
     const [posts, setPosts] = useState<(Post & { authorProfileImage: string, authorName: string, authorEmail: string })[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [hasMorePosts, setHasMorePosts] = useState(true);
 
-    const fetchPosts = async () => {
+    const fetchPosts = async (page: number = 1, append: boolean = false) => {
         try {
-            const { data, success } = await handleFetch("/api/posts");
+            const url = enablePagination
+                ? `/api/posts?page=${page}&limit=${postsPerPage}`
+                : "/api/posts";
+
+            const { data, success } = await handleFetch(url);
 
             if (success) {
                 // Add author information to posts
-                const postsWithAuthor = data.map((post: Post & { authorProfileImage: string, authorName: string, authorEmail: string }) => ({
+                const postsWithAuthor = data.posts?.map((post: Post & { authorProfileImage: string, authorName: string, authorEmail: string }) => ({
+                    ...post,
+                })) || data.map((post: Post & { authorProfileImage: string, authorName: string, authorEmail: string }) => ({
                     ...post,
                 }));
-                setPosts(postsWithAuthor);
+
+                if (append) {
+                    setPosts(prev => [...prev, ...postsWithAuthor]);
+                } else {
+                    setPosts(postsWithAuthor);
+                }
+
+                // Check if there are more posts for pagination
+                if (enablePagination && data.posts) {
+                    setHasMorePosts(data.posts.length === postsPerPage);
+                }
             } else {
                 toast.error("Failed to load posts");
             }
@@ -48,7 +78,16 @@ export function PostsFeed({ className, session, isMobile }: PostsFeedProps) {
 
     const handleRefresh = async () => {
         setIsRefreshing(true);
-        await fetchPosts();
+        setCurrentPage(1);
+        await fetchPosts(1, false);
+    };
+
+    const handleLoadMore = async () => {
+        if (!hasMorePosts) return;
+
+        const nextPage = currentPage + 1;
+        setCurrentPage(nextPage);
+        await fetchPosts(nextPage, true);
     };
 
     const handlePostCreated = () => {
@@ -162,16 +201,45 @@ export function PostsFeed({ className, session, isMobile }: PostsFeedProps) {
                 </div>
             ) : (
                 <div className="w-full space-y-6">
-                    <MasonryGrid columns={isMobile ? 1 : 3}>
-                        {posts.map((post) => (
-                            <PostCard
-                                key={post.id}
-                                post={post}
-                                onReaction={handleReaction}
-                                onDelete={handleDeletePost}
-                            />
-                        ))}
-                    </MasonryGrid>
+                    {layoutType === "chronological" ? (
+                        <ChronologicalMasonry
+                            posts={posts}
+                            columns={isMobile ? 1 : 3}
+                            onReaction={handleReaction}
+                            onDelete={handleDeletePost}
+                        />
+                    ) : layoutType === "grouped" ? (
+                        <DateGroupedMasonry
+                            posts={posts}
+                            columns={isMobile ? 1 : 3}
+                            onReaction={handleReaction}
+                            onDelete={handleDeletePost}
+                        />
+                    ) : (
+                        <MasonryGrid columns={isMobile ? 1 : 3}>
+                            {posts.map((post) => (
+                                <PostCard
+                                    key={post.id}
+                                    post={post}
+                                    onReaction={handleReaction}
+                                    onDelete={handleDeletePost}
+                                />
+                            ))}
+                        </MasonryGrid>
+                    )}
+
+                    {/* Load More Button */}
+                    {enablePagination && hasMorePosts && (
+                        <div className="flex justify-center pt-6">
+                            <Button
+                                onClick={handleLoadMore}
+                                variant="outline"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? "Loading..." : "Load More Posts"}
+                            </Button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

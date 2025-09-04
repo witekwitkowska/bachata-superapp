@@ -23,7 +23,9 @@ export default async function PostsPage() {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <PostsFeed session={session} isMobile={mobileCheck} />
+            <PostsFeed session={session} isMobile={mobileCheck} layoutType="chronological"
+                enablePagination={true}
+                postsPerPage={20} />
         </div>
     );
 }
