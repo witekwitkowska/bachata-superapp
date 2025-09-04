@@ -28,8 +28,6 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
             displayNames[field] = formatFieldName(field);
         }
 
-        console.log('Location form - Display names generated:', displayNames);
-        console.log('Location form - Schema fields:', schemaFields);
         return displayNames;
     };
 
@@ -39,6 +37,9 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
 
         // Override with initial data if provided
         if (initialData) {
+            console.log('LocationForm - initialData:', initialData);
+            console.log('LocationForm - schemaKeys:', Object.keys(locationSchema.shape));
+
             // Only include fields that exist in the schema
             const schemaKeys = Object.keys(locationSchema.shape);
             const filteredInitialData = Object.keys(initialData).reduce((acc, key) => {
@@ -48,15 +49,27 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
                 return acc;
             }, {} as Record<string, any>);
 
-            const finalDefaults = {
-                ...schemaDefaults,
-                ...filteredInitialData,
-            };
-            console.log('Location form - Final defaults with initial data:', finalDefaults);
-            return finalDefaults;
+            console.log('LocationForm - filteredInitialData:', filteredInitialData);
+
+            // Ensure all schema fields are included, even if not in initialData
+            const allSchemaFields: Record<string, any> = {};
+            for (const fieldName of Object.keys(locationSchema.shape)) {
+                allSchemaFields[fieldName] = filteredInitialData[fieldName] ?? (schemaDefaults as any)[fieldName] ?? undefined;
+            }
+
+            console.log('LocationForm - finalDefaults:', allSchemaFields);
+            return allSchemaFields;
         }
 
-        console.log('Location form - Schema defaults:', schemaDefaults);
+        // If no initial data, ensure we have defaults for all schema fields
+        if (Object.keys(schemaDefaults).length === 0) {
+            const allFieldsDefaults: Record<string, any> = {};
+            for (const fieldName of Object.keys(locationSchema.shape)) {
+                allFieldsDefaults[fieldName] = undefined;
+            }
+            return allFieldsDefaults;
+        }
+
         return schemaDefaults;
     };
 
@@ -68,11 +81,12 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
                 entityName="location"
                 endpointType={initialData ? "PATCH" : "POST"}
                 displayNames={getDisplayNames()}
-                defaultValues={initialData ? getDefaultValues() : undefined}
+                defaultValues={getDefaultValues()}
                 buttonTitle={initialData ? "Update Location" : "Create Location"}
                 headerTitle={`${initialData ? "Edit" : "Add New"} Location`}
                 loadingTitle="Saving..."
                 className="space-y-4"
+                coordinatesList={["coordinates"]}
                 onFormSuccess={onFormSuccess}
             />
 

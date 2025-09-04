@@ -22,6 +22,7 @@ import { FaceFocusedImage } from "@/components/ui/face-focused-image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { handleFetch } from "@/lib/fetch";
 import { UserProfile } from "@/types/user";
 import { Event, Location as EventLocation } from "@/types/event.types";
@@ -83,6 +84,15 @@ export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter states
+  const [filters, setFilters] = useState({
+    priceRange: "all", // all, free, paid
+    skillLevel: "all", // all, beginner, intermediate, advanced
+    location: "all", // all, specific locations
+    dateRange: "all", // all, today, this-week, this-month
+    rating: 0, // minimum rating
+  });
 
   // Update URL when state changes
   const updateURL = (updates: Record<string, string>) => {
@@ -217,6 +227,46 @@ export default function Home() {
       );
     }
 
+    // Apply filters
+    if (filters.priceRange !== "all") {
+      if (filters.priceRange === "free") {
+        filtered = filtered.filter(item => !item.isPaid || item.price === 0);
+      } else if (filters.priceRange === "paid") {
+        filtered = filtered.filter(item => item.isPaid && item.price && item.price > 0);
+      }
+    }
+
+    if (filters.skillLevel !== "all") {
+      filtered = filtered.filter(item => item.skillLevel === filters.skillLevel);
+    }
+
+    if (filters.rating > 0) {
+      filtered = filtered.filter(item => item.rating >= filters.rating);
+    }
+
+    if (filters.dateRange !== "all") {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const thisWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const thisMonth = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+      filtered = filtered.filter(item => {
+        if (!item.date) return false;
+        const itemDate = new Date(item.date);
+
+        switch (filters.dateRange) {
+          case "today":
+            return itemDate >= today && itemDate < new Date(today.getTime() + 24 * 60 * 60 * 1000);
+          case "this-week":
+            return itemDate >= today && itemDate < thisWeek;
+          case "this-month":
+            return itemDate >= today && itemDate < thisMonth;
+          default:
+            return true;
+        }
+      });
+    }
+
     // Sort results
     switch (sortBy) {
       case "popular":
@@ -235,7 +285,7 @@ export default function Home() {
     }
 
     return filtered;
-  }, [results, searchQuery, sortBy]);
+  }, [results, searchQuery, sortBy, filters]);
 
   const handleSearchFocus = () => {
     setShowSearchResults(true);
@@ -322,17 +372,8 @@ export default function Home() {
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={handleSearchFocus}
                 onBlur={handleSearchBlur}
-                className="w-full pl-32 pr-8 py-8 text-lg border-0 rounded-2xl shadow-lg focus:ring-4 focus:ring-primary/20 focus:outline-none transition-all duration-200"
+                className="w-full pl-12 pr-4 py-8 text-lg border-0 rounded-2xl shadow-lg focus:ring-4 focus:ring-primary/20 focus:outline-none transition-all duration-200"
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full"
-              >
-                <Filter size={20} />
-              </Button>
             </div>
 
             {/* Search Results Dropdown */}
@@ -391,6 +432,105 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.0 }}
           >
+            {/* Filter Button */}
+            <Popover open={showFilters} onOpenChange={setShowFilters}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter size={16} />
+                  Filters
+                  {(filters.priceRange !== "all" || filters.skillLevel !== "all" || filters.location !== "all" || filters.dateRange !== "all" || filters.rating > 0) && (
+                    <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+                      {[filters.priceRange, filters.skillLevel, filters.location, filters.dateRange, filters.rating > 0 ? "rating" : null].filter(Boolean).length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-4" align="start">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Filters</h4>
+
+                  {/* Price Range */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Price</label>
+                    <Select value={filters.priceRange} onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Prices</SelectItem>
+                        <SelectItem value="free">Free Only</SelectItem>
+                        <SelectItem value="paid">Paid Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Skill Level */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Skill Level</label>
+                    <Select value={filters.skillLevel} onValueChange={(value) => setFilters(prev => ({ ...prev, skillLevel: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Levels</SelectItem>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date Range */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Date Range</label>
+                    <Select value={filters.dateRange} onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Dates</SelectItem>
+                        <SelectItem value="today">Today</SelectItem>
+                        <SelectItem value="this-week">This Week</SelectItem>
+                        <SelectItem value="this-month">This Month</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Minimum Rating */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Minimum Rating</label>
+                    <Select value={filters.rating.toString()} onValueChange={(value) => setFilters(prev => ({ ...prev, rating: parseInt(value) }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Any Rating</SelectItem>
+                        <SelectItem value="3">3+ Stars</SelectItem>
+                        <SelectItem value="4">4+ Stars</SelectItem>
+                        <SelectItem value="5">5 Stars Only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Clear Filters */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFilters({
+                      priceRange: "all",
+                      skillLevel: "all",
+                      location: "all",
+                      dateRange: "all",
+                      rating: 0
+                    })}
+                    className="w-full"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+
             {/* Sort Options */}
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={handleSortChange}>

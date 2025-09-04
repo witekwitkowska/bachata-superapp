@@ -30,7 +30,8 @@ export const locationSchema = z.object({
       lat: z.number(),
       lng: z.number(),
     })
-    .optional(),
+    .optional()
+    .default(undefined),
 });
 
 // Base Event Schema

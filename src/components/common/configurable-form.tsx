@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { DateTimePicker } from "./date-time-picker";
 import { DatePicker } from "./date-picker";
 import { ImageUploadWithPreview } from "../image-upload-with-preview";
+import { CoordinatesInput } from "./coordinates-input";
 
 type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     formSchema: T;
@@ -42,6 +43,7 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     dateOnlyList?: string[] // Fields that need date only (no time)
     weekdayList?: string[] // Fields that need weekday selection
     imagesList?: string[] // Fields that need image upload with preview
+    coordinatesList?: string[] // Fields that need coordinates input (lat, lng)
     containerClassName?: string;
     exclusionList?: string[];
     onError?: (error: unknown) => void;
@@ -79,6 +81,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     dateOnlyList,
     weekdayList,
     imagesList,
+    coordinatesList,
     containerClassName,
     exclusionList,
     onFormSuccess
@@ -94,7 +97,15 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
 
         // Extract defaults from schema
         const schemaDefaults = extractSchemaDefaults(formSchema);
-        console.log('Auto-extracted schema defaults:', schemaDefaults);
+
+        // If no defaults were extracted, create defaults for all schema fields
+        if (Object.keys(schemaDefaults).length === 0) {
+            const allFieldsDefaults: Record<string, any> = {};
+            for (const fieldName of Object.keys(formSchema.shape)) {
+                allFieldsDefaults[fieldName] = undefined;
+            }
+            return allFieldsDefaults;
+        }
         return schemaDefaults;
     }, [defaultValues, formSchema]);
 
@@ -302,10 +313,21 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                         }
                     })}
                 >
-                    {Object.keys(computedDefaultValues).filter(fieldKey =>
-                        !exclusionList?.includes(fieldKey) &&
-                        !autoDetectedLists.objectFields.includes(fieldKey)
-                    ).map((fieldKey) => {
+                    {(() => {
+                        console.log('ConfigurableForm - computedDefaultValues:', computedDefaultValues);
+                        console.log('ConfigurableForm - coordinatesList:', coordinatesList);
+                        console.log('ConfigurableForm - autoDetectedLists:', autoDetectedLists);
+                        return Object.keys(computedDefaultValues);
+                    })().filter(fieldKey => {
+                        const isExcluded = exclusionList?.includes(fieldKey);
+                        const isObjectField = autoDetectedLists.objectFields.includes(fieldKey);
+                        const isCoordinatesField = coordinatesList?.includes(fieldKey);
+                        const shouldExclude = isExcluded || (isObjectField && !isCoordinatesField);
+
+                        console.log(`Field ${fieldKey}: excluded=${isExcluded}, objectField=${isObjectField}, coordinatesField=${isCoordinatesField}, shouldExclude=${shouldExclude}`);
+
+                        return !shouldExclude;
+                    }).map((fieldKey) => {
 
 
                         return (
@@ -472,6 +494,23 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
+                                    ) : coordinatesList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormControl>
+                                                <CoordinatesInput
+                                                    value={field.value as { lat: number; lng: number } | null}
+                                                    onChange={(value) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(value);
+                                                    }}
+                                                    label={`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                    required={requiredList.includes(fieldKey)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
                                     ) : (
                                         <FormItem>
                                             <FormControl>
@@ -497,6 +536,8 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                             />
                         )
                     })}
+
+
                     <StatefulButton
                         ref={buttonRef}
                         type="submit"

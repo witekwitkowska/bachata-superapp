@@ -189,6 +189,7 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
                 optionsMap={getOptionsMap()}
                 imagesList={["images"]}
                 dateOnlyList={["startDate", "endDate"]}
+                coordinatesList={["coordinates"]}
                 className="grid gap-4 overflow-x-scroll"
                 endpointType={initialData ? "PATCH" : "POST"}
                 onFormSuccess={onFormSuccess}
