@@ -27,6 +27,7 @@ import { handlePost } from "@/lib/fetch";
 import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { iconLibrary } from "@/resources/icons";
+import { FaceFocusedImage } from "@/components/ui/face-focused-image";
 
 interface EventDetailsProps {
     event: Event | SocialEvent | Festival | PrivateSession | Workshop;
@@ -219,10 +220,15 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                 {event.images && event.images.length > 0 && (
                     <div className="relative">
                         <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
-                            <img
+                            <FaceFocusedImage
                                 src={event.images[currentImageIndex]}
                                 alt={event.title}
-                                className="w-full h-full object-cover"
+                                width={800}
+                                height={384}
+                                className="w-full h-full"
+                                objectPosition="center"
+                                priority={currentImageIndex === 0}
+                                fallback="/images/placeholder.jpg"
                             />
                             {event.images.length > 1 && (
                                 <>

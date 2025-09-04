@@ -1,5 +1,4 @@
-"use client";
-
+"use client";;
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +15,17 @@ import {
     Camera,
     Grid3X3,
     List,
-    Heart
+    Heart,
+    Edit3
 } from "lucide-react";
 import { PostCard } from "@/components/posts/PostCard";
 import { PostGrid } from "@/components/profile/PostGrid";
+import { ImagePositionEditor } from "@/components/profile/ImagePositionEditor";
 import type { UserProfile as UserProfileType } from "@/types/user";
 import type { Post } from "@/types/post.types";
 import { formatDistanceToNow } from "date-fns";
 import { getInitials } from "@/lib/utils";
+import { handlePatch } from "@/lib/fetch";
 
 interface UserProfileProps {
     profile: UserProfileType & {
@@ -45,6 +47,11 @@ interface UserProfileProps {
 
 export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts" }: UserProfileProps) {
     const [activeTab, setActiveTab] = useState(defaultTab);
+    const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+    const [avatarPosition, setAvatarPosition] = useState({
+        x: profile.avatarX || 50,
+        y: profile.avatarY || 50
+    });
 
     const getUserType = () => {
         if (profile.role === "admin") return { type: "admin", label: "Admin", color: "bg-purple-100 text-purple-800", icon: Star };
@@ -78,6 +85,34 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
         console.log("Delete post:", postId);
     };
 
+    const handleSaveAvatarPosition = async (x: number, y: number) => {
+        try {
+            const { success, error } = await handlePatch(`/api/users/${profile.id}`, { avatarX: x, avatarY: y }, 'failed to update avatar position');
+
+            if (success) {
+                setAvatarPosition({ x, y });
+                setIsEditingAvatar(false);
+            } else {
+                throw new Error(error || "Failed to update avatar position");
+            }
+        } catch (error) {
+            console.error("Error saving avatar position:", error);
+            throw error;
+        }
+    };
+
+    const handleCancelAvatarEdit = () => {
+        setIsEditingAvatar(false);
+        // Reset to original position
+        setAvatarPosition({
+            x: profile.avatarX || 50,
+            y: profile.avatarY || 50
+        });
+    };
+
+    console.log(avatarPosition);
+
+
     return (
         <div className="lg:w-1/2 w-full mx-auto min-h-screen bg-transparent">
             {/* Banner */}
@@ -107,12 +142,29 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                                         <AvatarImage
                                             src={profileImage}
                                             alt={`${profile.name}'s profile`}
+                                            className="object-cover"
+                                            style={{
+                                                objectPosition: `${avatarPosition.x}% ${avatarPosition.y}%`
+                                            }}
                                         />
                                     )}
                                     <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white">
                                         {getInitials(profile.name)}
                                     </AvatarFallback>
                                 </Avatar>
+
+                                {/* Edit Avatar Position Button */}
+                                {isOwnProfile && profileImage && (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="absolute -top-2 -right-2 h-8 w-8 rounded-full p-0 shadow-lg hover:shadow-xl transition-all duration-200"
+                                        onClick={() => setIsEditingAvatar(true)}
+                                    >
+                                        <Edit3 className="h-4 w-4" />
+                                    </Button>
+                                )}
+
                                 {/* User Type Badge */}
                                 <div className="absolute -bottom-2 -right-2">
                                     <Badge className={`${userType.color} border-2 border-background shadow-lg flex items-center gap-1 hover:scale-105 transition-transform duration-200`}>
@@ -247,6 +299,18 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Image Position Editor Modal */}
+            {profileImage && (
+                <ImagePositionEditor
+                    imageUrl={profileImage}
+                    initialX={avatarPosition.x}
+                    initialY={avatarPosition.y}
+                    onSave={handleSaveAvatarPosition}
+                    onCancel={handleCancelAvatarEdit}
+                    isOpen={isEditingAvatar}
+                />
+            )}
         </div>
     );
 }

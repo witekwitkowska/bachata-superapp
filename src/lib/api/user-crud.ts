@@ -3,14 +3,20 @@ import { createCrudRoute } from "@/lib/api/crud-generator";
 import { userUpdateSchema } from "@/lib/zod";
 import { ObjectId } from "mongodb";
 
-export type UserUpdateData = z.infer<typeof userUpdateSchema>;
+// Extended user update schema to include avatar position
+const extendedUserUpdateSchema = userUpdateSchema.extend({
+  avatarX: z.number().min(0).max(100).optional(),
+  avatarY: z.number().min(0).max(100).optional(),
+});
+
+export type UserUpdateData = z.infer<typeof extendedUserUpdateSchema>;
 
 // CRUD configuration for users
 export const userCrudConfig = {
   entity: "users",
   auth: true,
   roles: ["admin", "visitor"],
-  schema: userUpdateSchema,
+  schema: extendedUserUpdateSchema,
   projection: { password: 0 } as Record<string, 0 | 1>,
   sort: { createdAt: -1 as const },
   customFilters: (session: any) => ({

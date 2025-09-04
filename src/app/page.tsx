@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FaceFocusedImage } from "@/components/ui/face-focused-image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -480,16 +481,23 @@ export default function Home() {
                   onClick={() => {
                     if (result.type !== "artist") {
                       router.push(`/events/${result.id}`);
+                    } else {
+                      router.push(`/profile/${result.id}`);
                     }
                   }}
                 >
-                  <img
-                    src={result.image}
-                    alt={result.title || result.name}
-                    className={`object-cover ${viewMode === "list"
+                  <FaceFocusedImage
+                    src={result.image || "/images/placeholder.jpg"}
+                    alt={result.title || result.name || "Event or Artist"}
+                    width={viewMode === "list" ? 96 : 400}
+                    height={viewMode === "list" ? 96 : 192}
+                    className={`${viewMode === "list"
                       ? "w-24 h-24"
                       : "w-full h-48"
                       }`}
+                    objectPosition={result.type === "artist" ? "top" : "center"}
+                    priority={index < 4}
+                    fallback="/images/placeholder.jpg"
                   />
                   <CardContent className={`p-4 flex-1 ${viewMode === "list" ? "flex-1" : ""}`}>
                     <div className="flex items-start justify-between mb-2">

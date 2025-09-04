@@ -9,6 +9,8 @@ export interface UserProfile {
   gallery?: string[];
   banners?: string[];
   avatars?: string[];
+  avatarX?: number; // X position for avatar object-position (0-100)
+  avatarY?: number; // Y position for avatar object-position (0-100)
   isPublic?: boolean;
   role?: string;
   isTeacher?: boolean;

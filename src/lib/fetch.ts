@@ -21,6 +21,7 @@ async function handleRequest(
       method: options.method || "GET",
       headers: {
         "Content-Type": "application/json",
+        "X-Internal-Call": "true",
         ...options.headers,
       },
       body: options.body ? JSON.stringify(options.body) : undefined,

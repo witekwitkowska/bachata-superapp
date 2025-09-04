@@ -222,6 +222,8 @@ export const userEditSchema = z.object({
   website: z.string().default("").optional(),
   bachataLevel: z.string().default("beginner").optional(),
   isPublic: z.boolean().default(false).optional(),
+  avatarX: z.number().min(0).max(100).optional(),
+  avatarY: z.number().min(0).max(100).optional(),
   // avatar: z.string().optional(),
   //date of birth
 });
