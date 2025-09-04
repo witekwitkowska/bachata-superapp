@@ -34,25 +34,61 @@ export function ImagePositionEditor({
     }, [initialX, initialY]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
         setIsDragging(true);
-        updatePosition(e);
+        updatePositionFromMouse(e);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
         if (!isDragging) return;
-        updatePosition(e);
+        e.preventDefault();
+        updatePositionFromMouse(e);
     };
 
     const handleMouseUp = () => {
         setIsDragging(false);
     };
 
-    const updatePosition = (e: React.MouseEvent) => {
+    const handleTouchStart = (e: React.TouchEvent) => {
+        e.stopPropagation();
+        setIsDragging(true);
+        updatePositionFromTouch(e);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isDragging) return;
+        e.stopPropagation();
+        updatePositionFromTouch(e);
+    };
+
+    const handleTouchEnd = () => {
+        setIsDragging(false);
+    };
+
+
+    const updatePositionFromMouse = (e: React.MouseEvent) => {
         if (!containerRef.current) return;
 
         const rect = containerRef.current.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        // Clamp values between 0 and 100
+        const clampedX = Math.max(0, Math.min(100, x));
+        const clampedY = Math.max(0, Math.min(100, y));
+
+        setPosition({ x: clampedX, y: clampedY });
+    };
+
+    const updatePositionFromTouch = (e: React.TouchEvent) => {
+        if (!containerRef.current) return;
+
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = ((touch.clientX - rect.left) / rect.width) * 100;
+        const y = ((touch.clientY - rect.top) / rect.height) * 100;
 
         // Clamp values between 0 and 100
         const clampedX = Math.max(0, Math.min(100, x));
@@ -93,17 +129,21 @@ export function ImagePositionEditor({
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="text-sm text-muted-foreground">
-                        Click and drag on the image to adjust the position. The image will be cropped to show the selected area.
+                        Tap and drag on the image to adjust the position. The image will be cropped to show the selected area.
                     </div>
 
                     {/* Image Preview Container */}
                     <div
                         ref={containerRef}
-                        className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden cursor-crosshair select-none"
+                        className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden cursor-crosshair select-none touch-none"
+                        style={{ touchAction: 'none' }}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseUp}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
                     >
                         <img
                             ref={imageRef}
