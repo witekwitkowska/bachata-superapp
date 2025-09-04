@@ -45,6 +45,20 @@ export const baseEventSchema = z.object({
   maxAttendees: z.number().min(1).optional(),
   published: z.boolean().default(false),
   images: z.array(z.url()).default([]),
+  instagramLink: z.url().optional(),
+  facebookLink: z.url().optional(),
+  twitterLink: z.url().optional(),
+  youtubeLink: z.url().optional(),
+  tiktokLink: z.url().optional(),
+  websiteLink: z.url().optional(),
+  email: z.email().optional(),
+  phone: z.string().optional(),
+  coordinates: z
+    .object({
+      lat: z.number().optional(),
+      lng: z.number().optional(),
+    })
+    .optional(),
 });
 
 // Social Event Schema

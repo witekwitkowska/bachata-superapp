@@ -475,7 +475,14 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ y: -5 }}
               >
-                <Card className={`overflow-hidden hover:shadow-xl transition-all duration-300 ${viewMode === "list" ? "flex items-center" : ""}`}>
+                <Card
+                  className={`overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer ${viewMode === "list" ? "flex items-center" : ""}`}
+                  onClick={() => {
+                    if (result.type !== "artist") {
+                      router.push(`/events/${result.id}`);
+                    }
+                  }}
+                >
                   <img
                     src={result.image}
                     alt={result.title || result.name}

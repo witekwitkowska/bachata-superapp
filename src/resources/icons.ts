@@ -31,6 +31,10 @@ import {
   FaLinkedin,
   FaX,
   FaThreads,
+  FaFacebook,
+  FaInstagram,
+  FaYoutube,
+  FaTiktok,
 } from "react-icons/fa6";
 
 export const iconLibrary: Record<string, IconType> = {
@@ -52,6 +56,10 @@ export const iconLibrary: Record<string, IconType> = {
   linkedin: FaLinkedin,
   x: FaX,
   threads: FaThreads,
+  facebook: FaFacebook,
+  instagram: FaInstagram,
+  youtube: FaYoutube,
+  tiktok: FaTiktok,
   arrowUpRightFromSquare: HiArrowTopRightOnSquare,
   document: HiOutlineDocument,
   rocket: HiOutlineRocketLaunch,

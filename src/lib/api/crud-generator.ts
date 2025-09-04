@@ -10,6 +10,7 @@ export interface CrudConfig<T = any> {
   projection?: Record<string, 0 | 1>;
   sort?: Record<string, 1 | -1>;
   customFilters?: (session: any) => Record<string, any>;
+  paramName?: string; // Custom parameter name for dynamic routes
   beforeCreate?: (data: T, session: any) => Promise<T> | T;
   beforeUpdate?: (
     data: Partial<T>,
@@ -79,6 +80,7 @@ export function transform<T>(data: T, config: CrudConfig): T {
 export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
   const GET = async (request: NextRequest) => {
     try {
+      console.log("MAIN GET route hit for entity:", config.entity);
       const session = await checkAuth(config, request);
       const collection = await getCollection(config.entity);
 
@@ -114,13 +116,24 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
   const GET_BY_ID = async (
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ [key: string]: string }> }
   ) => {
     try {
+      console.log("GET_BY_ID route hit for entity:", config.entity);
       const session = await checkAuth(config, request);
       const collection = await getCollection(config.entity);
 
-      const { id } = await params;
+      const paramName = config.paramName || "id";
+      const resolvedParams = await params;
+      const id = resolvedParams[paramName];
+      console.log(
+        "GET_BY_ID - paramName:",
+        paramName,
+        "resolvedParams:",
+        resolvedParams,
+        "id:",
+        id
+      );
 
       const document = await collection.findOne({
         _id: new ObjectId(id),
@@ -176,13 +189,14 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
   const PATCH = async (
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ [key: string]: string }> }
   ) => {
     try {
       const session = await checkAuth(config, request);
       const collection = await getCollection(config.entity);
 
-      const { id } = await params;
+      const paramName = config.paramName || "id";
+      const id = (await params)[paramName];
       const body = await request.json();
       let data = body;
 
@@ -218,12 +232,13 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
   const DELETE = async (
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: Promise<{ [key: string]: string }> }
   ) => {
     try {
       const session = await checkAuth(config, request);
 
-      const { id } = await params;
+      const paramName = config.paramName || "id";
+      const id = (await params)[paramName];
 
       if (config.beforeDelete) {
         const canDelete = await config.beforeDelete(session, id);

@@ -30,6 +30,20 @@ export interface BaseEvent {
   images?: string[]; // Added for image support
   rating?: number; // Added for rating support
   teacher?: any; // Added for teacher reference
+  startDate?: Date;
+  endDate?: Date;
+  instagramLink?: string;
+  facebookLink?: string;
+  twitterLink?: string;
+  youtubeLink?: string;
+  tiktokLink?: string;
+  websiteLink?: string;
+  email?: string;
+  phone?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export interface SocialEvent extends BaseEvent {
@@ -44,8 +58,6 @@ export interface SocialEvent extends BaseEvent {
 export interface Festival extends BaseEvent {
   type: "festival";
   organizerId: string;
-  startDate: Date;
-  endDate: Date;
   attendeeIds: string[];
   performers: string[];
   schedule?: Array<{

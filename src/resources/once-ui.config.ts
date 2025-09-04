@@ -37,6 +37,7 @@ const routes: RoutesConfig = {
   "/dashboard/admin/events": true,
   "/dashboard/admin/tags": true,
   "/profile/[userId]": true,
+  "/events/[eventId]": true,
 };
 
 const display: DisplayConfig = {
