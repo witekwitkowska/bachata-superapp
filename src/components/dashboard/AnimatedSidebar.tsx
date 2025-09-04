@@ -1,13 +1,12 @@
-"use client";
-
+"use client";;
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Menu, X, User, Settings, BookOpen, Home, GraduationCap, LogOut, Calendar, MapPin, Users, Shield, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMediaQuery } from "react-responsive";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { Session } from "next-auth";
 
 const navigation = [
     { id: "overview", label: "Overview", icon: Home, href: "/dashboard" },
@@ -17,24 +16,24 @@ const navigation = [
     { id: "settings", label: "Settings", icon: Settings, href: "/dashboard/settings" },
     // Admin pages (only shown to admin users)
     { id: "admin-dashboard", label: "Admin Dashboard", icon: Shield, href: "/dashboard/admin", adminOnly: true },
-    { id: "admin-socials", label: "Manage Socials", icon: Calendar, href: "/dashboard/admin/socials", adminOnly: true },
+    { id: "admin-socials", label: "Manage Socials", icon: Calendar, href: "/dashboard/admin/socials", adminOnly: true, organizerOnly: true },
     { id: "admin-festivals", label: "Manage Festivals", icon: Calendar, href: "/dashboard/admin/festivals", adminOnly: true },
-    { id: "admin-sessions", label: "Private Sessions", icon: Users, href: "/dashboard/admin/private-sessions", adminOnly: true },
-    { id: "admin-workshops", label: "Manage Workshops", icon: GraduationCap, href: "/dashboard/admin/workshops", adminOnly: true },
+    { id: "admin-sessions", label: "Private Sessions", icon: Users, href: "/dashboard/admin/private-sessions", adminOnly: true, organizerOnly: true },
+    { id: "admin-workshops", label: "Manage Workshops", icon: GraduationCap, href: "/dashboard/admin/workshops", adminOnly: true, organizerOnly: true },
     { id: "admin-locations", label: "Manage Locations", icon: MapPin, href: "/dashboard/admin/locations", adminOnly: true },
     { id: "admin-events", label: "All Events", icon: Calendar, href: "/dashboard/admin/events", adminOnly: true },
     { id: "admin-tags", label: "Manage Tags", icon: Tag, href: "/dashboard/admin/tags", adminOnly: true },
+    { id: "admin-users", label: "Manage Users", icon: Users, href: "/dashboard/admin/users", adminOnly: true },
 ];
 
-export function AnimatedSidebar() {
+export function AnimatedSidebar({ session, isMobile }: { session: Session | null, isMobile: boolean }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
-    const isMobile = useMediaQuery({ query: "(max-width: 768px)" });
-    const { data: session } = useSession();
     const isAdmin = session?.user?.role === "admin";
+    const isOrganizer = session?.user?.role === "organizer";
 
     // Filter navigation items based on user role
-    const filteredNavigation = navigation.filter(item => !item.adminOnly || isAdmin);
+    const filteredNavigation = navigation.filter(item => !item.adminOnly || isAdmin || (item.organizerOnly && isOrganizer));
 
     return (
         <>

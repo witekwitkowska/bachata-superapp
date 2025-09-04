@@ -18,6 +18,7 @@ import { DateTimePicker } from "./date-time-picker";
 import { DatePicker } from "./date-picker";
 import { ImageUploadWithPreview } from "../image-upload-with-preview";
 import { CoordinatesInput } from "./coordinates-input";
+import { VideoLinksInput } from "./video-links-input";
 
 type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     formSchema: T;
@@ -44,6 +45,7 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     weekdayList?: string[] // Fields that need weekday selection
     imagesList?: string[] // Fields that need image upload with preview
     coordinatesList?: string[] // Fields that need coordinates input (lat, lng)
+    inputList?: string[] // Fields that need special input components (like videoLinks)
     containerClassName?: string;
     exclusionList?: string[];
     onError?: (error: unknown) => void;
@@ -82,6 +84,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     weekdayList,
     imagesList,
     coordinatesList,
+    inputList,
     containerClassName,
     exclusionList,
     onFormSuccess
@@ -261,7 +264,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     const finalSelectorList = selectorList && selectorList.length > 0 ? selectorList : autoDetectedLists.selectorFields;
     const finalSwitchList = switchList && switchList.length > 0 ? switchList : autoDetectedLists.switchFields;
     const finalDateList = dateList && dateList.length > 0 ? dateList : autoDetectedLists.dateFields;
-    const finalArrayList = multiSelectorList && multiSelectorList.length > 0 ? multiSelectorList : autoDetectedLists.arrayFields;
+    const finalArrayList = multiSelectorList && multiSelectorList.length > 0 ? multiSelectorList : autoDetectedLists.arrayFields.filter(field => !inputList?.includes(field));
     const finalNumericList = autoDetectedLists.numericFields;
 
 
@@ -326,7 +329,8 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                         const isExcluded = exclusionList?.includes(fieldKey);
                         const isObjectField = autoDetectedLists.objectFields.includes(fieldKey);
                         const isCoordinatesField = coordinatesList?.includes(fieldKey);
-                        const shouldExclude = isExcluded || (isObjectField && !isCoordinatesField);
+                        const isInputListField = inputList?.includes(fieldKey);
+                        const shouldExclude = isExcluded || (isObjectField && !isCoordinatesField && !isInputListField);
                         return !shouldExclude;
                     }).map((fieldKey) => {
 
@@ -509,6 +513,38 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                                     label={`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                                     required={requiredList.includes(fieldKey)}
                                                 />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : inputList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormControl>
+                                                {fieldKey === 'videoLinks' ? (
+                                                    <VideoLinksInput
+                                                        value={field.value as any[] || []}
+                                                        onChange={(value) => {
+                                                            if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                                form.clearErrors(fieldKey as Path<FormData>);
+                                                            }
+                                                            field.onChange(value);
+                                                        }}
+                                                        label={`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                        placeholder={`Enter ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}...`}
+                                                    />
+                                                ) : (
+                                                    <CompactInput
+                                                        label={`${displayNames ? displayNames[fieldKey] : fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                                        {...field}
+                                                        placeholder={`Ingresa ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}`}
+                                                        value={field.value as string}
+                                                        onChange={(e) => {
+                                                            if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                                form.clearErrors(fieldKey as Path<FormData>);
+                                                            }
+                                                            field.onChange(e);
+                                                        }}
+                                                    />
+                                                )}
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>

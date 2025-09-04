@@ -176,7 +176,12 @@ export function EventAdminPage({ eventType, title, description, initialEvents }:
                     <h1 className="text-3xl font-bold">{title}</h1>
                     <p className="text-muted-foreground">{description}</p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(value) => {
+                    if (!value) {
+                        setEditingEvent(null);
+                    }
+                    setIsDialogOpen(value)
+                }}>
                     <DialogTrigger asChild>
                         <Button>Add New {title.slice(0, -1)}</Button>
                     </DialogTrigger>

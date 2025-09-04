@@ -16,16 +16,22 @@ import {
     Grid3X3,
     List,
     Heart,
-    Edit3
+    Edit3,
+    Play,
+    ChevronLeft,
 } from "lucide-react";
 import { PostCard } from "@/components/posts/PostCard";
 import { PostGrid } from "@/components/profile/PostGrid";
 import { ImagePositionEditor } from "@/components/profile/ImagePositionEditor";
+import { VideoCarousel } from "@/components/events/VideoCarousel";
+import { FullscreenImageModal } from "@/components/common/FullscreenImageModal";
+import { convertToVideoLinks } from "@/lib/video-utils";
 import type { UserProfile as UserProfileType } from "@/types/user";
 import type { Post } from "@/types/post.types";
 import { formatDistanceToNow } from "date-fns";
 import { getInitials } from "@/lib/utils";
 import { handlePatch } from "@/lib/fetch";
+import Link from "next/link";
 
 interface UserProfileProps {
     profile: UserProfileType & {
@@ -116,21 +122,34 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
     return (
         <div className="lg:w-1/2 w-full mx-auto min-h-screen bg-transparent">
             {/* Banner */}
-            <div className="relative h-64 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 overflow-hidden rounded-lg">
+            <div className="relative h-64 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 overflow-hidden rounded-lg group">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent">
+                    <Link href="/" className="absolute z-1 top-4 left-4 hover:opacity-80 transition-opacity">
+                        <ChevronLeft className="h-4 w-4 text-white" />
+                    </Link>
+                </div>
                 {bannerImage ? (
-                    <img
+                    <FullscreenImageModal
                         src={bannerImage}
                         alt="Profile banner"
-                        className="w-full h-full object-cover"
+                        trigger={
+                            <div className="relative w-full h-full cursor-pointer">
+                                <img
+                                    src={bannerImage}
+                                    alt="Profile banner"
+                                    className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/20" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                            </div>
+                        }
                     />
                 ) : (
                     <div className="w-full h-full bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600" />
                 )}
-                <div className="absolute inset-0 bg-black/20" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
             </div>
 
-            <div className="container mx-auto px-4 -mt-16 relative z-10">
+            <div className="container mx-auto px-4 -mt-16 relative z-5">
                 {/* Profile Header */}
                 <Card className="mb-6 shadow-lg border-0 bg-background backdrop-blur-sm">
                     <CardContent className="p-6">
@@ -260,13 +279,18 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                 <Card className="shadow-lg border-0 bg-transparent backdrop-blur-sm">
                     <CardContent className="p-0">
                         <Tabs value={activeTab} onValueChange={setActiveTab}>
-                            <TabsList className="sticky top-0 z-1 grid w-full grid-cols-2 rounded-lg border-b px-8 h-16 py-8">
+                            <TabsList className={`sticky top-0 z-5 grid w-full ${profile.videoLinks && profile.videoLinks.length > 0 ? 'grid-cols-3' : 'grid-cols-2'} rounded-lg border-b px-8 h-16 py-8`}>
                                 <TabsTrigger value="posts" className="flex items-center gap-2 h-full">
                                     <List className="h-4 w-4" />
                                 </TabsTrigger>
                                 <TabsTrigger value="gallery" className="flex items-center gap-2 h-full">
                                     <Grid3X3 className="h-4 w-4" />
                                 </TabsTrigger>
+                                {profile.videoLinks && profile.videoLinks.length > 0 && (
+                                    <TabsTrigger value="videos" className="flex items-center gap-2 h-full">
+                                        <Play className="h-4 w-4" />
+                                    </TabsTrigger>
+                                )}
                             </TabsList>
 
                             <TabsContent value="posts" className="p-6">
@@ -295,6 +319,15 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                             <TabsContent value="gallery" className="p-6">
                                 <PostGrid posts={posts} />
                             </TabsContent>
+
+                            {profile.videoLinks && profile.videoLinks.length > 0 && (
+                                <TabsContent value="videos" className="p-6">
+                                    <VideoCarousel
+                                        videoLinks={convertToVideoLinks(profile.videoLinks)}
+                                        className="w-full"
+                                    />
+                                </TabsContent>
+                            )}
                         </Tabs>
                     </CardContent>
                 </Card>

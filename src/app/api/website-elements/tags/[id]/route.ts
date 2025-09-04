@@ -18,6 +18,6 @@ const config = {
   },
 };
 
-const { GET: GET_BY_ID, PATCH, DELETE } = createCrudRoute(config);
+const { GET_BY_ID, PATCH, DELETE } = createCrudRoute(config);
 
 export { GET_BY_ID as GET, PATCH, DELETE };

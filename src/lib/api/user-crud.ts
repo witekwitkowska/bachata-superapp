@@ -3,10 +3,11 @@ import { createCrudRoute } from "@/lib/api/crud-generator";
 import { userUpdateSchema } from "@/lib/zod";
 import { ObjectId } from "mongodb";
 
-// Extended user update schema to include avatar position
+// Extended user update schema to include avatar position and status
 const extendedUserUpdateSchema = userUpdateSchema.extend({
   avatarX: z.number().min(0).max(100).optional(),
   avatarY: z.number().min(0).max(100).optional(),
+  status: z.enum(["active", "inactive", "suspended"]).optional(),
 });
 
 export type UserUpdateData = z.infer<typeof extendedUserUpdateSchema>;
@@ -15,14 +16,14 @@ export type UserUpdateData = z.infer<typeof extendedUserUpdateSchema>;
 export const userCrudConfig = {
   entity: "users",
   auth: true,
-  roles: ["admin", "visitor"],
+  roles: ["admin"], // Only admins can access user management
   schema: extendedUserUpdateSchema,
   projection: { password: 0 } as Record<string, 0 | 1>,
   sort: { createdAt: -1 as const },
-  customFilters: (session: any) => ({
-    // Only show active users by default
-    status: "active",
-  }),
+  customFilters: (session: any) => {
+    // Admins can see all users, no filtering
+    return {};
+  },
   beforeUpdate: async (data: any, session: any, id: string) => {
     // Only admins can change roles
     if (data.role && session.user.role !== "admin") {

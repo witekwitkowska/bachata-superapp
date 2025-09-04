@@ -41,6 +41,16 @@ const config = {
       updatedAt: new Date().toISOString(),
     };
   },
+  customFilters: async (_: any, params?: URLSearchParams) => {
+    //filter by authorId
+    if (params?.get("authorId")) {
+      const authorId = new ObjectId(String(params?.get("authorId") || ""));
+      return {
+        authorId,
+      };
+    }
+    return {};
+  },
 };
 
 const { GET, POST, PATCH, DELETE } = createCrudRoute(config);

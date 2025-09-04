@@ -20,6 +20,7 @@ import {
 import { SessionProvider } from "next-auth/react";
 import { style, dataStyle } from "../resources";
 import { iconLibrary } from "../resources/icons";
+import { Toaster } from "./ui/sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -50,7 +51,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
             }}
           >
             <ToastProvider>
-              <IconProvider icons={iconLibrary}>{children}</IconProvider>
+              <IconProvider icons={iconLibrary}>
+                {children}
+                <Toaster />
+              </IconProvider>
             </ToastProvider>
           </DataThemeProvider>
         </ThemeProvider>

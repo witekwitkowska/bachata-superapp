@@ -9,7 +9,10 @@ export interface CrudConfig<T = any> {
   roles?: string[];
   projection?: Record<string, 0 | 1>;
   sort?: Record<string, 1 | -1>;
-  customFilters?: (session: any) => Record<string, any>;
+  customFilters?: (
+    session: any,
+    params?: URLSearchParams
+  ) => Record<string, any> | Promise<Record<string, any>>;
   paramName?: string; // Custom parameter name for dynamic routes
   beforeCreate?: (data: T, session: any) => Promise<T> | T;
   beforeUpdate?: (
@@ -29,8 +32,8 @@ export interface CrudConfig<T = any> {
 }
 
 export async function checkAuth(config: CrudConfig, request?: NextRequest) {
-  console.log("config", config, request?.method);
   if (!config.auth || request?.method === "GET") return null;
+
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
@@ -80,27 +83,18 @@ export function transform<T>(data: T, config: CrudConfig): T {
 export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
   const GET = async (request: NextRequest) => {
     try {
-      console.log("MAIN GET route hit for entity:", config.entity);
+      const { searchParams } = new URL(request.url);
       const session = await checkAuth(config, request);
       const collection = await getCollection(config.entity);
-
-      const filters = config.customFilters ? config.customFilters(session) : {};
+      const filters = config.customFilters
+        ? await config.customFilters(session, searchParams)
+        : {};
       const sort = config.sort || { createdAt: -1 as const };
 
+      console.log(filters, "filters");
       const documents = await collection.find(filters).sort(sort).toArray();
-      console.log(
-        "GET route - documents before transform:",
-        documents.length,
-        "docs"
-      );
-      console.log("GET route - config projection:", config.projection);
 
       const transformedDocs = documents.map((doc) => transform(doc, config));
-      console.log(
-        "GET route - documents after transform:",
-        transformedDocs.length,
-        "docs"
-      );
 
       return Response.json({
         success: true,
@@ -216,9 +210,9 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
         );
       }
 
-      //   if (config.afterUpdate) {
-      //     await config.afterUpdate(data, session, id);
-      //   }
+      if (config.afterUpdate) {
+        await config.afterUpdate(data, session, id);
+      }
 
       return Response.json({ success: true, data: { id: id } });
     } catch (error) {

@@ -18,35 +18,34 @@ import {
     Heart,
     Share2,
     ChevronLeft,
-    ChevronRight,
     ExternalLink
 } from "lucide-react";
-import { format } from "date-fns";
 import { toast } from "sonner";
 import { handlePost } from "@/lib/fetch";
 import { Session } from "next-auth";
 import { useRouter } from "next/navigation";
 import { iconLibrary } from "@/resources/icons";
 import { FaceFocusedImage } from "@/components/ui/face-focused-image";
+import { VideoCarousel } from "./VideoCarousel";
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+    formatEventTime,
+    generateGoogleMapsLink,
+    formatEventDuration,
+    getEventTypeIcon,
+    getEventTypeColor
+} from "@/utils/event-utils";
 
 interface EventDetailsProps {
     event: Event | SocialEvent | Festival | PrivateSession | Workshop;
     session: Session;
 }
-
-const formatEventTime = (time: Date | string) => {
-    const eventTime = new Date(time);
-    return {
-        date: format(eventTime, "EEEE, MMMM do, yyyy"),
-        time: format(eventTime, "h:mm a"),
-    };
-};
-
-const generateGoogleMapsLink = (coordinates: { lat: number; lng: number }, locationName?: string) => {
-    const { lat, lng } = coordinates;
-    const query = locationName ? encodeURIComponent(locationName) : `${lat},${lng}`;
-    return `https://www.google.com/maps/search/?api=1&query=${query}`;
-};
 
 const getSocialMediaIcon = (platform: string) => {
     const IconComponent = iconLibrary[platform as keyof typeof iconLibrary];
@@ -55,7 +54,6 @@ const getSocialMediaIcon = (platform: string) => {
 
 export function EventDetails({ event, session }: EventDetailsProps) {
     const router = useRouter();
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isAttending, setIsAttending] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -65,46 +63,19 @@ export function EventDetails({ event, session }: EventDetailsProps) {
     console.log('EventDetails - event.location:', event.location);
     console.log('EventDetails - event.location?.coordinates:', (event.location as Location)?.coordinates);
 
-    const formatEventDuration = (event: Event, startDate: Date, endDate: Date) => {
-        if (event.type === "private-session" && "duration" in event) {
-            return `${event.duration} minutes`;
-        }
-        if (event.type === "festival" && "startDate" in event && "endDate" in event) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-            return `${days} day${days > 1 ? 's' : ''}`;
-        }
-        return "2-3 hours"; // Default for social events and workshops
-    };
-
-    const getEventTypeIcon = (type: string) => {
-        switch (type) {
-            case "social":
+    const getEventTypeIconComponent = (type: string) => {
+        const iconName = getEventTypeIcon(type);
+        switch (iconName) {
+            case "Users":
                 return <Users className="h-5 w-5" />;
-            case "festival":
+            case "Music":
                 return <Music className="h-5 w-5" />;
-            case "workshop":
+            case "BookOpen":
                 return <BookOpen className="h-5 w-5" />;
-            case "private-session":
+            case "User":
                 return <User className="h-5 w-5" />;
             default:
                 return <Calendar className="h-5 w-5" />;
-        }
-    };
-
-    const getEventTypeColor = (type: string) => {
-        switch (type) {
-            case "social":
-                return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-            case "festival":
-                return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-            case "workshop":
-                return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-            case "private-session":
-                return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-            default:
-                return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
         }
     };
 
@@ -143,31 +114,24 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                     text: event.description,
                     url: window.location.href,
                 });
+                toast.success("Event shared successfully!");
             } catch (error) {
-                // User cancelled sharing
+                // User cancelled sharing - don't show error toast
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    toast.error("Failed to share event");
+                }
             }
         } else {
             // Fallback: copy to clipboard
-            await navigator.clipboard.writeText(window.location.href);
-            toast.success("Event link copied to clipboard!");
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                toast.success("Event link copied to clipboard!");
+            } catch (error) {
+                toast.error("Failed to copy link to clipboard");
+            }
         }
     };
 
-    const nextImage = () => {
-        if (event.images && event.images.length > 0) {
-            setCurrentImageIndex((prev) =>
-                prev === event.images!.length - 1 ? 0 : prev + 1
-            );
-        }
-    };
-
-    const prevImage = () => {
-        if (event.images && event.images.length > 0) {
-            setCurrentImageIndex((prev) =>
-                prev === 0 ? event.images!.length - 1 : prev - 1
-            );
-        }
-    };
 
     const eventTime = (event.time || event.startDate) ? formatEventTime(event.startDate || event.time) : null;
 
@@ -188,7 +152,7 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            {event.type && getEventTypeIcon(event.type)}
+                            {event.type && getEventTypeIconComponent(event.type)}
                             <Badge className={getEventTypeColor(event.type)}>
                                 {event.type?.replace("-", " ").toUpperCase()}
                             </Badge>
@@ -224,51 +188,33 @@ export function EventDetails({ event, session }: EventDetailsProps) {
 
                 {/* Event Images */}
                 {event.images && event.images.length > 0 && (
-                    <div className="relative">
-                        <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
-                            <FaceFocusedImage
-                                src={event.images[currentImageIndex]}
-                                alt={event.title}
-                                width={800}
-                                height={384}
-                                className="w-full h-full"
-                                objectPosition="center"
-                                priority={currentImageIndex === 0}
-                                fallback="/images/placeholder.jpg"
-                            />
+                    <div className="w-full">
+                        <Carousel className="w-full">
+                            <CarouselContent>
+                                {event.images.map((image, index) => (
+                                    <CarouselItem key={index}>
+                                        <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
+                                            <FaceFocusedImage
+                                                src={image}
+                                                alt={`${event.title} - Image ${index + 1}`}
+                                                width={800}
+                                                height={384}
+                                                className="w-full h-full"
+                                                objectPosition="center"
+                                                priority={index === 0}
+                                                fallback="/images/placeholder.jpg"
+                                            />
+                                        </div>
+                                    </CarouselItem>
+                                ))}
+                            </CarouselContent>
                             {event.images.length > 1 && (
                                 <>
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="absolute left-2 top-1/2 transform -translate-y-1/2"
-                                        onClick={prevImage}
-                                    >
-                                        <ChevronLeft className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                                        onClick={nextImage}
-                                    >
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                                        <div className="flex gap-2">
-                                            {event.images.map((_, index) => (
-                                                <button
-                                                    key={index}
-                                                    className={`w-2 h-2 rounded-full ${index === currentImageIndex ? "bg-white" : "bg-white/50"
-                                                        }`}
-                                                    onClick={() => setCurrentImageIndex(index)}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
+                                    <CarouselPrevious />
+                                    <CarouselNext />
                                 </>
                             )}
-                        </div>
+                        </Carousel>
                     </div>
                 )}
             </div>
@@ -474,6 +420,14 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                                 </div>
                             </CardContent>
                         </Card>
+                    )}
+
+                    {/* Video Carousel */}
+                    {event.videoLinks && event.videoLinks.length > 0 && (
+                        <VideoCarousel
+                            videoLinks={event.videoLinks}
+                            className="mt-6"
+                        />
                     )}
                 </div>
 

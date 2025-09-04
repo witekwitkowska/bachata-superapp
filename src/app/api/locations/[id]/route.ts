@@ -28,14 +28,13 @@ const config = {
       // Get the updated location data
       const updatedLocation = await db
         .collection("locations")
-        .findOne({ _id: new ObjectId(id) });
+        .findOne({ _id: new ObjectId(String(id)) });
 
       if (updatedLocation) {
         // Update all events that have this location populated in their location object
         const result = await db.collection("events").updateMany(
           {
-            locationId: id,
-            "location._id": new ObjectId(id), // Events that have the location object populated
+            "location._id": new ObjectId(String(id)), // Events that have the location object populated
           },
           {
             $set: {
@@ -43,10 +42,6 @@ const config = {
               updatedAt: new Date(),
             },
           }
-        );
-
-        console.log(
-          `Updated ${result.modifiedCount} events with new location data for location ${id}`
         );
       }
     } catch (error) {
@@ -56,6 +51,6 @@ const config = {
   },
 };
 
-const { GET: GET_BY_ID, PATCH, DELETE } = createCrudRoute(config);
+const { GET_BY_ID, PATCH, DELETE } = createCrudRoute(config);
 
 export { GET_BY_ID as GET, PATCH, DELETE };

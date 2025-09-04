@@ -28,7 +28,7 @@ export const postCrudConfig = {
     // Auto-assign the author
     return {
       ...data,
-      authorId: session.user.id,
+      authorId: new ObjectId(String(session.user.id)),
       createdAt: new Date(),
       updatedAt: new Date(),
     };

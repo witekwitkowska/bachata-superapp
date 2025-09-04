@@ -125,7 +125,12 @@ export function LocationsClient({ initialLocations }: LocationsClientProps) {
                     <h1 className="text-3xl font-bold">Locations</h1>
                     <p className="text-muted-foreground">Manage event locations</p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(value) => {
+                    if (!value) {
+                        setEditingLocation(null);
+                    }
+                    setIsDialogOpen(value)
+                }}>
                     <DialogTrigger asChild>
                         <Button>Add New Location</Button>
                     </DialogTrigger>

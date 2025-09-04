@@ -54,6 +54,16 @@ export const baseEventSchema = z.object({
   websiteLink: z.url().optional(),
   email: z.email().optional(),
   phone: z.string().optional(),
+  videoLinks: z
+    .array(
+      z.object({
+        id: z.string(),
+        url: z.string().url(),
+        type: z.enum(["youtube", "instagram", "unknown"]),
+      })
+    )
+    .default([])
+    .optional(),
   coordinates: z
     .object({
       lat: z.number().optional(),
@@ -244,7 +254,7 @@ export const passwordChangeSchema = z
 export const userInteractionSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   name: z.string().min(1, "Name is required"),
-  profileImage: z.string().url().optional(),
+  profileImage: z.url().optional(),
 });
 
 // Post Schema

@@ -1,14 +1,21 @@
 import { AnimatedSidebar } from "@/components/dashboard/AnimatedSidebar";
 import { AnimatedContentWrapper } from "@/components/dashboard/AnimatedContentWrapper";
+import { auth } from "@/auth";
+import { headers } from "next/headers";
+import { isMobile } from "@/lib/utils";
 
 export default async function DashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const receivedHeaders = await headers()
+    const userAgent = receivedHeaders.get("user-agent") || "";
+    const mobileCheck = isMobile(userAgent);
+    const session = await auth();
     return (
         <div className="w-full flex min-h-screen">
-            <AnimatedSidebar />
+            <AnimatedSidebar session={session} isMobile={mobileCheck} />
 
             {/* Main Content */}
             <div className="w-full lg:ml-72 ml-0 min-h-screen">

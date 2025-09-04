@@ -40,6 +40,11 @@ export interface BaseEvent {
   websiteLink?: string;
   email?: string;
   phone?: string;
+  videoLinks?: Array<{
+    id: string;
+    url: string;
+    type: "youtube" | "instagram" | "unknown";
+  }>;
   coordinates?: {
     lat: number;
     lng: number;
