@@ -12,6 +12,24 @@ const config = {
   auth: true,
   roles: ["admin", "visitor", "organizer"],
   projection: {} as Record<string, 0 | 1>, // This will enable the transform function
+  customFilters: async (session: any, params?: URLSearchParams) => {
+    const filters: any = {};
+
+    // Filter by type
+    if (params?.get("type")) {
+      const types = params.get("type")?.split(",") || [];
+      if (types.length > 0) {
+        filters.type = { $in: types };
+      }
+    }
+
+    // Filter by published status
+    if (params?.get("published")) {
+      filters.published = params.get("published") === "true";
+    }
+
+    return filters;
+  },
   beforeCreate: async (data: EventInput) => {
     console.log(data);
     const { db } = await connectToDatabase();

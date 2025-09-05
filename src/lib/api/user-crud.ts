@@ -20,9 +20,43 @@ export const userCrudConfig = {
   schema: extendedUserUpdateSchema,
   projection: { password: 0 } as Record<string, 0 | 1>,
   sort: { createdAt: -1 as const },
-  customFilters: (session: any) => {
-    // Admins can see all users, no filtering
-    return {};
+  customFilters: async (session: any, params?: URLSearchParams) => {
+    const filters: any = {};
+
+    // Filter by type
+    if (params?.get("role")) {
+      filters.role = params.get("role");
+    }
+
+    if (params?.get("status")) {
+      filters.status = params.get("status");
+    }
+
+    if (params?.get("isTeacher")) {
+      filters.isTeacher = params.get("isTeacher") === "true";
+    }
+
+    if (params?.get("isPublic")) {
+      filters.isPublic = params.get("isPublic") === "true";
+    }
+
+    if (params?.get("name")) {
+      filters.name = { $regex: params.get("name"), $options: "i" };
+    }
+
+    if (params?.get("email")) {
+      filters.email = { $regex: params.get("email"), $options: "i" };
+    }
+
+    if (params?.get("location")) {
+      filters.location = { $regex: params.get("location"), $options: "i" };
+    }
+
+    if (params?.get("website")) {
+      filters.website = { $regex: params.get("website"), $options: "i" };
+    }
+
+    return filters;
   },
   beforeUpdate: async (data: any, session: any, id: string) => {
     // Only admins can change roles

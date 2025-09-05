@@ -90,9 +90,15 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
         ? await config.customFilters(session, searchParams)
         : {};
       const sort = config.sort || { createdAt: -1 as const };
+      const limit = searchParams.get("limit")
+        ? parseInt(searchParams.get("limit")!)
+        : undefined;
 
-      console.log(filters, "filters");
-      const documents = await collection.find(filters).sort(sort).toArray();
+      let query = collection.find(filters).sort(sort);
+      if (limit) {
+        query = query.limit(limit);
+      }
+      const documents = await query.toArray();
 
       const transformedDocs = documents.map((doc) => transform(doc, config));
 
