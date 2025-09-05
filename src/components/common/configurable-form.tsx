@@ -101,19 +101,56 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         // Extract defaults from schema
         const schemaDefaults = extractSchemaDefaults(formSchema);
 
-        // If no defaults were extracted, create defaults for all schema fields
-        if (Object.keys(schemaDefaults).length === 0) {
-            const allFieldsDefaults: Record<string, any> = {};
-            for (const fieldName of Object.keys(formSchema.shape)) {
-                allFieldsDefaults[fieldName] = undefined;
+        // Create defaults for all schema fields, using schema defaults where available
+        const allFieldsDefaults: Record<string, any> = {};
+        for (const fieldName of Object.keys(formSchema.shape)) {
+            const fieldSchema = formSchema.shape[fieldName];
+
+            // Use schema default if available
+            if (schemaDefaults[fieldName] !== undefined) {
+                allFieldsDefaults[fieldName] = schemaDefaults[fieldName];
+            } else {
+                // Set appropriate defaults based on field type
+                if (fieldSchema && typeof fieldSchema === 'object' && '_def' in fieldSchema) {
+                    const fieldType = (fieldSchema as any)._def.type;
+                    if (fieldType === 'string') {
+                        allFieldsDefaults[fieldName] = '';
+                    } else if (fieldType === 'boolean') {
+                        allFieldsDefaults[fieldName] = false;
+                    } else if (fieldType === 'number') {
+                        allFieldsDefaults[fieldName] = 0;
+                    } else if (fieldType === 'array') {
+                        allFieldsDefaults[fieldName] = [];
+                    } else if (fieldType === 'date') {
+                        allFieldsDefaults[fieldName] = undefined;
+                    } else {
+                        allFieldsDefaults[fieldName] = undefined;
+                    }
+                } else {
+                    allFieldsDefaults[fieldName] = undefined;
+                }
             }
-            return allFieldsDefaults;
         }
-        return schemaDefaults;
+        return allFieldsDefaults;
     }, [defaultValues, formSchema]);
 
+    // Create a modified schema that excludes the excluded fields for validation
+    const validationSchema = useMemo(() => {
+        if (!exclusionList || exclusionList.length === 0) {
+            return formSchema;
+        }
+
+        // Create a new schema that omits excluded fields
+        const schemaShape = { ...formSchema.shape };
+        exclusionList.forEach(field => {
+            delete schemaShape[field];
+        });
+
+        return z.object(schemaShape);
+    }, [formSchema, exclusionList]);
+
     const form = useForm<FormData>({
-        resolver: zodResolver(formSchema) as any,
+        resolver: zodResolver(validationSchema) as any,
         defaultValues: computedDefaultValues as DefaultValues<FormData>,
         mode: 'onChange'
     });
@@ -127,7 +164,11 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         loading: form.formState.isSubmitting
     }));
 
-    const requiredList = useMemo(() => getZodRequiredFields(formSchema), [formSchema])
+    const requiredList = useMemo(() => {
+        const allRequired = getZodRequiredFields(formSchema);
+        // Filter out excluded fields from required list
+        return allRequired.filter(field => !exclusionList?.includes(field));
+    }, [formSchema, exclusionList])
 
     // Utility function to extract options from Zod schema
     const extractOptionsFromSchema = useCallback((fieldName: string) => {
@@ -291,11 +332,12 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
         }
     );
 
-    const { isValid, isDirty, isSubmitting } = form.formState;
+    const { isValid, isDirty, isSubmitting, errors } = form.formState;
 
+    // For edit mode, require changes (isDirty). For create mode, only require valid data
     const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading || isUploading;
 
-
+    console.log(`${entityName} isValid: ${isValid}, isDirty: ${isDirty}, isButtonDisabled: ${isButtonDisabled}`);
 
     return (
         <div className={containerClassName}>
@@ -310,7 +352,17 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                             return acc;
                         }, {} as any);
 
-                        const mergedData = { ...cleanedData, ...extraData };
+                        // Add excluded fields to the data
+                        const dataWithExcludedFields = { ...cleanedData };
+                        if (exclusionList) {
+                            exclusionList.forEach(field => {
+                                if (field === 'type') {
+                                    dataWithExcludedFields[field] = 'social'; // Set the appropriate type
+                                }
+                            });
+                        }
+
+                        const mergedData = { ...dataWithExcludedFields, ...extraData };
                         try {
                             if (endpointType === 'PATCH') {
                                 await onPatch(mergedData);

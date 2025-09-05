@@ -29,16 +29,71 @@ export function getRequiredFields<T extends Record<string, unknown>>(
 export function getZodRequiredFields(schema: z.ZodType<any, any>): string[] {
   try {
     // For Zod object schemas, we can try to infer the shape
-    // This is a simplified approach that may not work for all schema types
     if (schema && typeof schema === "object" && "_def" in schema) {
       const def = (schema as any)._def;
       if (def && def.shape) {
-        const shape = def.shape();
+        // shape is an object, not a function
+        const shape = typeof def.shape === "function" ? def.shape() : def.shape;
         if (shape && typeof shape === "object") {
           return Object.keys(shape).filter((key) => {
             const field = shape[key];
-            // Check if field is not optional (required)
-            return field && field._def && field._def.typeName !== "ZodOptional";
+            if (!field || !field._def) return false;
+
+            // Check if field is optional (not required)
+            if (field._def.type === "optional") return false;
+
+            // For ZodDefault fields, check the inner type
+            let actualField = field;
+            if (field._def.type === "default") {
+              actualField = field._def.innerType;
+            }
+
+            if (!actualField || !actualField._def) return false;
+
+            // Check if the actual field is optional
+            if (actualField._def.type === "optional") return false;
+
+            // Check if field is an enum (usually required)
+            if (actualField._def.type === "enum") return true;
+
+            // Check if field is a literal (usually required)
+            if (actualField._def.type === "literal") return true;
+
+            // Check if field is a date (usually required)
+            if (actualField._def.type === "date") return true;
+
+            // Check if field is a boolean (usually not required - they have default values)
+            if (actualField._def.type === "boolean") return false;
+
+            // For string fields, check if they have min(1) validation
+            if (actualField._def.type === "string") {
+              const checks = actualField._def.checks || [];
+              const hasMinCheck = checks.some(
+                (check: any) => check.kind === "min" && check.value > 0
+              );
+              const hasMinLength =
+                (actualField as any).minLength &&
+                (actualField as any).minLength > 0;
+              return hasMinCheck || hasMinLength;
+            }
+
+            // For array fields, check if they have min validation
+            if (actualField._def.type === "array") {
+              const checks = actualField._def.checks || [];
+              return checks.some(
+                (check: any) => check.kind === "min" && check.value > 0
+              );
+            }
+
+            // For number fields, check if they have min validation
+            if (actualField._def.type === "number") {
+              const checks = actualField._def.checks || [];
+              return checks.some(
+                (check: any) => check.kind === "min" && check.value > 0
+              );
+            }
+
+            return false;
           });
         }
       }

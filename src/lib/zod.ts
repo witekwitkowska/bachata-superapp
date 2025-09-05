@@ -21,10 +21,10 @@ export const phoneValidation = string()
 
 // Location Schema
 export const locationSchema = z.object({
-  name: z.string().min(1, "Location name is required").default(""),
-  address: z.string().min(1, "Address is required").default(""),
-  city: z.string().min(1, "City is required").default(""),
-  country: z.string().min(1, "Country is required").default(""),
+  name: z.string().min(1, "Location name is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  country: z.string().min(1, "Country is required"),
   coordinates: z
     .object({
       lat: z.number(),
@@ -36,11 +36,11 @@ export const locationSchema = z.object({
 
 // Base Event Schema
 export const baseEventSchema = z.object({
-  title: z.string().min(1, "Title is required").default(""),
-  description: z.string().min(1, "Description is required").default(""),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
   type: z.enum(["social", "festival", "private-session", "workshop"]),
   isPaid: z.boolean().default(false),
-  locationId: z.string().min(1, "Location is required").default(""),
+  locationId: z.string().min(1, "Location is required"),
   price: z.number().min(0).default(0).optional(),
   currency: z.string().default("EUR").optional(),
   maxAttendees: z.number().min(1).optional(),
@@ -75,7 +75,7 @@ export const baseEventSchema = z.object({
 // Social Event Schema
 export const socialEventSchema = baseEventSchema.extend({
   type: z.literal("social"),
-  organizerId: z.string().min(1, "Organizer is required").default(""),
+  organizerId: z.string().min(1, "Organizer is required"),
   weeklyDays: z
     .array(
       z.enum([
@@ -91,9 +91,7 @@ export const socialEventSchema = baseEventSchema.extend({
     .default([])
     .optional(),
   startDate: z.date().default(() => new Date()),
-  endDate: z
-    .date()
-    .default(() => new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)), // 1 year from now
+  endDate: z.date().default(() => new Date(Date.now() + 24 * 60 * 60 * 1000)), // 1 day from now
   musicStyle: z.string().default("").optional(),
   dressCode: z.string().default("").optional(),
   includesFood: z.boolean().default(false).optional(),
@@ -104,9 +102,9 @@ export const socialEventSchema = baseEventSchema.extend({
 export const festivalEventSchema = baseEventSchema
   .extend({
     type: z.literal("festival"),
-    organizerId: z.string().min(1, "Organizer is required").default(""),
+    organizerId: z.string().min(1, "Organizer is required"),
     startDate: z.date().default(() => new Date()),
-    endDate: z.date().default(() => new Date(Date.now() + 24 * 60 * 60 * 1000)), // Tomorrow
+    endDate: z.date().default(() => new Date(Date.now() + 24 * 60 * 60 * 1000)), // 1 day from now
     attendeeIds: z.array(z.string()).default([]),
     performers: z
       .array(z.string())
@@ -149,8 +147,8 @@ export const festivalEventSchema = baseEventSchema
 // Private Session Schema
 export const privateSessionSchema = baseEventSchema.extend({
   type: z.literal("private-session"),
-  teacherId: z.string().min(1, "Teacher is required").default(""),
-  studentId: z.string().min(1, "Student is required").default(""),
+  teacherId: z.string().min(1, "Teacher is required"),
+  studentId: z.string().min(1, "Student is required"),
   duration: z
     .number()
     .min(15, "Duration must be at least 15 minutes")
@@ -166,7 +164,7 @@ export const privateSessionSchema = baseEventSchema.extend({
 // Workshop Schema
 export const workshopSchema = baseEventSchema.extend({
   type: z.literal("workshop"),
-  teacherId: z.string().min(1, "Teacher is required").default(""),
+  teacherId: z.string().min(1, "Teacher is required"),
   skillLevel: z
     .enum(["beginner", "intermediate", "advanced"])
     .default("beginner"),

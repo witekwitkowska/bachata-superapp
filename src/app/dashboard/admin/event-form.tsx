@@ -153,10 +153,11 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
                 return acc;
             }, {} as Record<string, any>);
 
-            const finalDefaults = {
-                ...schemaDefaults,
-                ...filteredInitialData,
-            };
+            // For edit mode, use only the initial data, not merged with schema defaults
+            // Also remove excluded fields from the default values
+            const finalDefaults = { ...filteredInitialData };
+            // Remove excluded fields (type is always excluded for events)
+            delete finalDefaults.type;
 
             // Ensure date fields are proper Date objects
             if ((finalDefaults as any).startDate && typeof (finalDefaults as any).startDate === 'string') {
@@ -166,11 +167,8 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
                 (finalDefaults as any).endDate = new Date((finalDefaults as any).endDate);
             }
 
-            console.log('Final defaults with initial data:', finalDefaults);
             return finalDefaults;
         }
-
-        console.log('Schema defaults:', schemaDefaults);
         return schemaDefaults;
     };
 
