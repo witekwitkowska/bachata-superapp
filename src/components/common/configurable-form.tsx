@@ -324,7 +324,8 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                     })}
                 >
                     {(() => {
-                        return Object.keys(computedDefaultValues);
+                        // Use schema fields instead of computedDefaultValues keys
+                        return Object.keys(formSchema.shape);
                     })().filter(fieldKey => {
                         const isExcluded = exclusionList?.includes(fieldKey);
                         const isObjectField = autoDetectedLists.objectFields.includes(fieldKey);
