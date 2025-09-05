@@ -3,11 +3,7 @@ import { UsersClient } from "./users-client";
 import { UserProfile } from "@/types/user.d";
 import { Users } from "lucide-react";
 
-interface UsersPageProps {
-    searchParams: { [key: string]: string | string[] | undefined };
-}
-
-export default async function UsersPage({ searchParams }: UsersPageProps) {
+export default async function UsersPage() {
     let users: UserProfile[] = [];
     let error: string | null = null;
 
