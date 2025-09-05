@@ -90,6 +90,16 @@ export function DataTable<TData, TValue>({
                     const isPaid = value === "paid";
                     if (itemRecord.isPaid !== isPaid) return false;
                 }
+                else if (key === "role" && value !== "all") {
+                    if (itemRecord.role !== value) return false;
+                }
+                else if (key === "status" && value !== "all") {
+                    if (itemRecord.status !== value) return false;
+                }
+                else if (key === "isTeacher" && value !== "all") {
+                    const isTeacher = value === "true";
+                    if (itemRecord.isTeacher !== isTeacher) return false;
+                }
             }
 
             // Global filter for search
@@ -303,6 +313,9 @@ function getFilterLabelByName(name: string): string {
         case "published": return "Publication Status";
         case "type": return "Event Type";
         case "isPaid": return "Payment Status";
+        case "role": return "User Role";
+        case "status": return "User Status";
+        case "isTeacher": return "Teacher Status";
         default: return name;
     }
 }
