@@ -37,8 +37,8 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
 
         // Override with initial data if provided
         if (initialData) {
-            console.log('LocationForm - initialData:', initialData);
-            console.log('LocationForm - schemaKeys:', Object.keys(locationSchema.shape));
+
+
 
             // Only include fields that exist in the schema
             const schemaKeys = Object.keys(locationSchema.shape);
@@ -49,7 +49,7 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
                 return acc;
             }, {} as Record<string, any>);
 
-            console.log('LocationForm - filteredInitialData:', filteredInitialData);
+
 
             // Ensure all schema fields are included, even if not in initialData
             const allSchemaFields: Record<string, any> = {};
@@ -59,7 +59,7 @@ export function LocationForm({ initialData, onSubmit, onCancel, onFormSuccess }:
                 allSchemaFields[fieldName] = value === null ? undefined : value;
             }
 
-            console.log('LocationForm - finalDefaults:', allSchemaFields);
+
             return allSchemaFields;
         }
 

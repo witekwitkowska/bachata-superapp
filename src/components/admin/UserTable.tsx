@@ -242,7 +242,7 @@ export function UserTable({ users, onUserUpdate }: UserTableProps) {
                                 // Handle delete user
                                 if (confirm(`Are you sure you want to delete ${user.name}?`)) {
                                     // Implement delete functionality
-                                    console.log("Delete user:", user.id);
+
                                 }
                             }}
                             disabled={isUpdating}

@@ -66,7 +66,7 @@ export function ProfileEdit({ session, profile, defaultTab }: ProfileEditProps) 
         });
     }, [profile]);
 
-    console.log(profile, 'profile');
+
 
     return (
         <Tabs value={activeTab} onValueChange={handleSetActiveTab}>

@@ -68,7 +68,7 @@ export const FormWrapper = forwardRef(
 
         const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading;
 
-        console.log(form.formState?.errors, form.formState?.isValid, isSubmitDisabled, !isValid, !isDirty, isSubmitting, loading);
+
 
         return (
             <Form {...form}>

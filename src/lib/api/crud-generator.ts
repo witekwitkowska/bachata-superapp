@@ -119,7 +119,6 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
     { params }: { params: Promise<{ [key: string]: string }> }
   ) => {
     try {
-      console.log("GET_BY_ID route hit for entity:", config.entity);
       const session = await checkAuth(config, request);
       const collection = await getCollection(config.entity);
 
@@ -222,7 +221,6 @@ export function generateCrudRoutes<T = any>(config: CrudConfig<T>) {
 
       return Response.json({ success: true, data: { id: id } });
     } catch (error) {
-      console.log("error in PATCH", error);
       return Response.json(
         { success: false, error: (error as Error).message },
         { status: 400 }

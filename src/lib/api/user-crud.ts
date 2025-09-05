@@ -89,15 +89,9 @@ export const userCrudConfig = {
 
     return true;
   },
-  afterCreate: async (data: any, session: any) => {
-    console.log(`User created by ${session.user.email}:`, data.email);
-  },
-  afterUpdate: async (data: any, session: any, id: string) => {
-    console.log(`User ${id} updated by ${session.user.email}`);
-  },
-  afterDelete: async (id: string, session: any) => {
-    console.log(`User ${id} deleted by ${session.user.email}`);
-  },
+  afterCreate: async (data: any, session: any) => {},
+  afterUpdate: async (data: any, session: any, id: string) => {},
+  afterDelete: async (id: string, session: any) => {},
 };
 
 // Generate CRUD routes

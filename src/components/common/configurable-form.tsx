@@ -368,10 +368,10 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     // For edit mode, require changes (isDirty). For create mode, only require valid data
     const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading || isUploading;
 
-    console.log(`${entityName} isValid: ${isValid}, isDirty: ${isDirty}, isButtonDisabled: ${isButtonDisabled}`);
-    console.log(`${entityName} computedDefaultValues:`, computedDefaultValues);
-    console.log(`${entityName} form.getValues():`, form.getValues());
-    console.log(`${entityName} form.formState.defaultValues:`, form.formState.defaultValues);
+
+
+
+
 
     return (
         <div className={containerClassName}>

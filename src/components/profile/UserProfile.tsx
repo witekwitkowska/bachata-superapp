@@ -83,12 +83,12 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
 
     const handleReaction = async (postId: string, reactionType: "lightning" | "fire" | "ice") => {
         // Handle post reactions
-        console.log("Reaction:", { postId, reactionType });
+
     };
 
     const handleDelete = async (postId: string) => {
         // Handle post deletion
-        console.log("Delete post:", postId);
+
     };
 
     const handleSaveAvatarPosition = async (x: number, y: number) => {
@@ -115,8 +115,6 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
             y: profile.avatarY || 50
         });
     };
-
-    console.log(avatarPosition);
 
 
     return (

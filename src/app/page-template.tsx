@@ -214,7 +214,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
       // Fetch artists (users with teacher role)
       if (tab === "all" || tab === "artists") {
         const artistsData = await handleFetch("/api/users?isPublic=true&limit=500", "Failed to fetch artists");
-        console.log(artistsData, 'artistsData');
         if (artistsData.success && artistsData.data) {
           const artists = artistsData.data.map(transformUserToSearchResult);
           allResults.push(...artists);

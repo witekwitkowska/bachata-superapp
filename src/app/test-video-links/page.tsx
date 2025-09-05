@@ -11,7 +11,7 @@ export default function TestVideoLinksPage() {
     const [videoLinks, setVideoLinks] = useState<VideoLink[]>([]);
 
     const handleSubmit = () => {
-        console.log("Video Links:", videoLinks);
+
         alert(`Submitted ${videoLinks.length} video links!`);
     };
 

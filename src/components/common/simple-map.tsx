@@ -24,9 +24,9 @@ export function SimpleMap({
     const [currentTileLayer, setCurrentTileLayer] = useState(tileLayer);
     // Debug logging
     useEffect(() => {
-        console.log('SimpleMap mounted/updated:', { center, value, tileLayer });
+
         return () => {
-            console.log('SimpleMap unmounting');
+
         };
     }, [center, value, tileLayer]);
 
@@ -36,7 +36,7 @@ export function SimpleMap({
 
         const loadMap = async () => {
             try {
-                console.log('Loading map...', { center, value, currentTileLayer });
+
 
                 // Import Leaflet CSS
                 require('leaflet/dist/leaflet.css');
@@ -53,7 +53,7 @@ export function SimpleMap({
                 });
 
                 if (mapRef.current) {
-                    console.log('Creating map instance...');
+
 
                     // Create a fresh div element to avoid DOM reuse issues
                     const mapContainer = document.createElement('div');
@@ -103,9 +103,9 @@ export function SimpleMap({
                     setMapInstance(map);
                     setIsLoaded(true);
 
-                    console.log('Map loaded successfully!');
+
                 } else {
-                    console.log('mapRef.current is null');
+
                 }
             } catch (error) {
                 console.error('Failed to load map:', error);
@@ -126,7 +126,7 @@ export function SimpleMap({
                         mapInstance.remove();
                     }
                 } catch (error) {
-                    console.log('Error removing map instance:', error);
+
                 }
             }
             setMapInstance(null);

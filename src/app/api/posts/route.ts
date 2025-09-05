@@ -14,7 +14,6 @@ const config = {
   projection: {} as Record<string, 0 | 1>, // This will enable the transform function
   sort: { createdAt: -1 as const }, // Most recent first
   beforeCreate: async (data: PostInput) => {
-    console.log("beforeCreate", data);
     try {
       const { db } = await connectToDatabase();
 

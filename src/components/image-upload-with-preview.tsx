@@ -222,7 +222,7 @@ export function ImageUploadWithPreview({
 
     const handleDragStart = useCallback((e: React.DragEvent, imageUrl: string) => {
         if (!allowReordering) return;
-        console.log('Drag start:', imageUrl);
+
         setDraggedImage(imageUrl);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', imageUrl);
@@ -238,7 +238,7 @@ export function ImageUploadWithPreview({
     const handleDragEnter = useCallback((e: React.DragEvent, imageUrl: string) => {
         if (!allowReordering) return;
         e.preventDefault();
-        console.log('Drag enter:', imageUrl);
+
         setDragOverImage(imageUrl);
     }, [allowReordering]);
 
@@ -250,21 +250,21 @@ export function ImageUploadWithPreview({
 
     const handleDrop = useCallback((e: React.DragEvent, targetImageUrl: string) => {
         if (!allowReordering || !draggedImage || draggedImage === targetImageUrl) {
-            console.log('Drop prevented:', { allowReordering, draggedImage, targetImageUrl });
+
             return;
         }
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('Drop:', { draggedImage, targetImageUrl });
+
 
         const draggedIndex = existingImages.indexOf(draggedImage);
         const targetIndex = existingImages.indexOf(targetImageUrl);
 
-        console.log('Indices:', { draggedIndex, targetIndex });
+
 
         if (draggedIndex === -1 || targetIndex === -1) {
-            console.log('Invalid indices');
+
             return;
         }
 
@@ -273,7 +273,7 @@ export function ImageUploadWithPreview({
         const [draggedItem] = newImages.splice(draggedIndex, 1);
         newImages.splice(targetIndex, 0, draggedItem);
 
-        console.log('New images order:', newImages);
+
 
         // Update parent component immediately
         onImagesChange(newImages);

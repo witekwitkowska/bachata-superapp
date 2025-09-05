@@ -74,15 +74,9 @@ export const postCrudConfig = {
 
     return true;
   },
-  afterCreate: async (data: any, session: any) => {
-    console.log(`Post created by ${session.user.email}:`, data.title);
-  },
-  afterUpdate: async (data: any, session: any, id: string) => {
-    console.log(`Post ${id} updated by ${session.user.email}`);
-  },
-  afterDelete: async (id: string, session: any) => {
-    console.log(`Post ${id} deleted by ${session.user.email}`);
-  },
+  afterCreate: async (data: any, session: any) => {},
+  afterUpdate: async (data: any, session: any, id: string) => {},
+  afterDelete: async (id: string, session: any) => {},
 };
 
 // Generate CRUD routes

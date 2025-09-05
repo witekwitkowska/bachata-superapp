@@ -58,10 +58,10 @@ export function EventDetails({ event, session }: EventDetailsProps) {
     const [isLoading, setIsLoading] = useState(false);
 
     // Debug logging to see what data we have
-    console.log('EventDetails - event:', event);
-    console.log('EventDetails - event.coordinates:', event.coordinates);
-    console.log('EventDetails - event.location:', event.location);
-    console.log('EventDetails - event.location?.coordinates:', (event.location as Location)?.coordinates);
+
+
+
+
 
     const getEventTypeIconComponent = (type: string) => {
         const iconName = getEventTypeIcon(type);

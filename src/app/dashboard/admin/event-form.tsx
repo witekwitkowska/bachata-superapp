@@ -89,8 +89,8 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
             displayNames[field] = formatFieldName(field);
         }
 
-        console.log('Display names generated:', displayNames);
-        console.log('Schema fields:', schemaFields);
+
+
         return displayNames;
     };
 
