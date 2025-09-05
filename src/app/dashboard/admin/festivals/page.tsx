@@ -12,12 +12,12 @@ export default async function FestivalsPage() {
         redirect("/auth/signin");
     }
 
-    if (session.user.role !== "admin") {
+    if (!["admin", "organizer"].includes(session.user.role)) {
         redirect("/dashboard");
     }
 
     // Fetch events on the server side
-    const result = await serverFetch(`${baseUrl}/api/events?type=festival`, "Failed to fetch festival events");
+    const result = await serverFetch(`${baseUrl}/api/events?type=festival${session.user.role === "organizer" ? `&organizerId=${session.user.id}` : ""}`, "Failed to fetch festival events");
     const events = result.success ? result.data : [];
 
     return (

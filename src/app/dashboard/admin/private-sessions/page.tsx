@@ -12,12 +12,12 @@ export default async function PrivateSessionsPage() {
         redirect("/auth/signin");
     }
 
-    if (session.user.role !== "admin") {
+    if (!["admin", "organizer"].includes(session.user.role)) {
         redirect("/dashboard");
     }
 
     // Fetch events on the server side
-    const result = await serverFetch(`${baseUrl}/api/events?type=private-session`, "Failed to fetch private session events");
+    const result = await serverFetch(`${baseUrl}/api/events?type=private-session${session.user.role === "organizer" ? `&organizerId=${session.user.id}` : ""}`, "Failed to fetch private session events");
     const events = result.success ? result.data : [];
 
     return (

@@ -12,12 +12,12 @@ export default async function SocialsPage() {
         redirect("/auth/signin");
     }
 
-    if (session.user.role !== "admin") {
+    if (!["admin", "organizer"].includes(session.user.role)) {
         redirect("/dashboard");
     }
 
     // Fetch events through API route (handles serialization)
-    const result = await serverFetch(`${baseUrl}/api/events?type=social`, "Failed to fetch social events");
+    const result = await serverFetch(`${baseUrl}/api/events?type=social${session.user.role === "organizer" ? `&organizerId=${session.user.id}` : ""}`, "Failed to fetch social events");
     const events = result.success ? result.data : [];
 
     return (

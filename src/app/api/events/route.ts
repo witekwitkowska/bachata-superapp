@@ -23,6 +23,18 @@ const config = {
       }
     }
 
+    if (params?.get("organizerId")) {
+      filters.organizerId = {
+        $in: params.get("organizerId")?.split(",") || [],
+      };
+    }
+
+    if (params?.get("teacherId")) {
+      filters.teacherId = {
+        $in: params.get("teacherId")?.split(",") || [],
+      };
+    }
+
     // Filter by published status
     if (params?.get("published")) {
       filters.published = params.get("published") === "true";
@@ -31,15 +43,23 @@ const config = {
     return filters;
   },
   beforeCreate: async (data: EventInput) => {
-    console.log(data);
     const { db } = await connectToDatabase();
     const location = await db
       .collection("locations")
       .findOne({ _id: new ObjectId(data.locationId) });
 
+    // Type-safe access to organizerId for social and festival events
+    const organizerId =
+      data.type === "social" || data.type === "festival"
+        ? (data as any).organizerId
+        : undefined;
+
     return {
       ...data,
       location: location,
+      ...(organizerId && {
+        organizerId: new ObjectId(String(organizerId)),
+      }),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
