@@ -2,13 +2,14 @@ import { serverFetch } from "@/lib/server-fetch";
 import { UsersClient } from "./users-client";
 import { UserProfile } from "@/types/user.d";
 import { Users } from "lucide-react";
+import { baseUrl } from "@/lib/utils";
 
 export default async function UsersPage() {
     let users: UserProfile[] = [];
     let error: string | null = null;
 
     try {
-        const response = await serverFetch("/api/users", "Failed to fetch users");
+        const response = await serverFetch(`${baseUrl}/api/users`, "Failed to fetch users");
         users = response.data || [];
     } catch (err) {
         error = err instanceof Error ? err.message : "Failed to load users";
