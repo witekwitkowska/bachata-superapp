@@ -95,7 +95,38 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     // Automatically extract default values from schema if none provided
     const computedDefaultValues = useMemo(() => {
         if (defaultValues) {
-            return defaultValues;
+            // When we have defaultValues (edit mode), ensure all schema fields are included
+            const allFieldsDefaults: Record<string, any> = {};
+
+            // First, set defaults for all schema fields
+            for (const fieldName of Object.keys(formSchema.shape)) {
+                const fieldSchema = formSchema.shape[fieldName];
+
+                // Set appropriate defaults based on field type
+                if (fieldSchema && typeof fieldSchema === 'object' && '_def' in fieldSchema) {
+                    const fieldType = (fieldSchema as any)._def.type;
+                    if (fieldType === 'string') {
+                        allFieldsDefaults[fieldName] = '';
+                    } else if (fieldType === 'boolean') {
+                        allFieldsDefaults[fieldName] = false;
+                    } else if (fieldType === 'number') {
+                        allFieldsDefaults[fieldName] = 0;
+                    } else if (fieldType === 'array') {
+                        allFieldsDefaults[fieldName] = [];
+                    } else if (fieldType === 'date') {
+                        allFieldsDefaults[fieldName] = undefined;
+                    } else {
+                        allFieldsDefaults[fieldName] = undefined;
+                    }
+                } else {
+                    allFieldsDefaults[fieldName] = undefined;
+                }
+            }
+
+            // Then override with the provided defaultValues
+            Object.assign(allFieldsDefaults, defaultValues);
+
+            return allFieldsDefaults;
         }
 
         // Extract defaults from schema
@@ -338,6 +369,9 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     const isButtonDisabled = isSubmitDisabled || !isValid || !isDirty || isSubmitting || loading || isUploading;
 
     console.log(`${entityName} isValid: ${isValid}, isDirty: ${isDirty}, isButtonDisabled: ${isButtonDisabled}`);
+    console.log(`${entityName} computedDefaultValues:`, computedDefaultValues);
+    console.log(`${entityName} form.getValues():`, form.getValues());
+    console.log(`${entityName} form.formState.defaultValues:`, form.formState.defaultValues);
 
     return (
         <div className={containerClassName}>
