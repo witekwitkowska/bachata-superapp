@@ -5,10 +5,10 @@ import { baseUrl } from "@/lib/utils";
 export default async function Home() {
     let data: any = [];
     try {
-        const usersData = await handleFetch(`${baseUrl}/api/users`, "Failed to fetch users");
+        const usersData = await handleFetch(`${baseUrl}/api/users?published=true`, "Failed to fetch users");
         data.push(...(usersData?.data || []));
 
-        const eventsData = await handleFetch(`${baseUrl}/api/events`, "Failed to fetch events");
+        const eventsData = await handleFetch(`${baseUrl}/api/events?published=true`, "Failed to fetch events");
         data.push(...(eventsData?.data || []));
     } catch (error) {
         console.error(error);

@@ -199,7 +199,7 @@ export default function Home({ initialData }: { initialData: any[] }) {
         }
 
 
-        const eventsData = await handleFetch(`/api/events?type=${eventTypes.join(",")}&limit=50`, "Failed to fetch events");
+        const eventsData = await handleFetch(`/api/events?type=${eventTypes.join(",")}&limit=50&published=true`, "Failed to fetch events");
         if (eventsData.success && eventsData.data) {
           const events = eventsData.data.map(transformEventToSearchResult);
           allResults.push(...events);
@@ -208,7 +208,7 @@ export default function Home({ initialData }: { initialData: any[] }) {
 
       // Fetch artists (users with teacher role)
       if (tab === "all" || tab === "artists") {
-        const artistsData = await handleFetch("/api/users?isPublic=true&limit=500", "Failed to fetch artists");
+        const artistsData = await handleFetch("/api/users?isPublic=true&limit=500&published=true", "Failed to fetch artists");
         if (artistsData.success && artistsData.data) {
           const artists = artistsData.data.map(transformUserToSearchResult);
           allResults.push(...artists);

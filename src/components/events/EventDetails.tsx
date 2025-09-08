@@ -475,15 +475,15 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                         <CardContent className="space-y-3">
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Attendees</span>
-                                <span className="font-medium">24</span>
+                                <span className="font-medium">0</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Interested</span>
-                                <span className="font-medium">156</span>
+                                <span className="font-medium">0</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Shares</span>
-                                <span className="font-medium">12</span>
+                                <span className="font-medium">0</span>
                             </div>
                         </CardContent>
                     </Card>
