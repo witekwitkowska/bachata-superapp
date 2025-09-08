@@ -39,7 +39,6 @@ interface SearchResult {
   city?: string;
   country?: string;
   date?: string;
-  rating: number;
   attendees?: number;
   students?: number;
   image: string;
@@ -66,7 +65,6 @@ const searchTabs = [
 
 const sortOptions = [
   { id: "popular", label: "Most Popular", icon: TrendingUp },
-  { id: "rated", label: "Most Rated", icon: Star },
   { id: "recent", label: "Most Recent", icon: Clock }
 ];
 
@@ -80,7 +78,6 @@ const transformUserToSearchResult = (user: UserProfile) => ({
   location: (user.location as string) || "Unknown Location",
   city: user.location as string,
   country: user.location as string,
-  rating: (user.followersCount as number) || 4.5,
   students: (user.followersCount as number) || 0,
   image: (user.avatars?.[0] || user.gallery?.[0] || "") as string,
   experience: user.bachataLevel as string,
@@ -97,7 +94,6 @@ const transformEventToSearchResult = (event: Event) => ({
   city: (event.location as EventLocation)?.city || "",
   country: (event.location as EventLocation)?.country || "",
   date: event.time as unknown as string,
-  rating: (event.rating as number) || 4.5,
   attendees: (event.maxAttendees as number) || 0,
   teacherName: (event.teacher as any)?.name || "",
   teacherImage: (event.teacher as any)?.image || (event.teacher as any)?.avatars?.[0] || "",
@@ -136,7 +132,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
     skillLevel: "all", // all, beginner, intermediate, advanced
     location: "all", // all, specific locations
     dateRange: "all", // all, today, this-week, this-month
-    rating: 0, // minimum rating
   });
 
   // Update URL when state changes
@@ -335,10 +330,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
       filtered = filtered.filter(item => item.skillLevel === filters.skillLevel);
     }
 
-    if (filters.rating > 0) {
-      filtered = filtered.filter(item => item.rating >= filters.rating);
-    }
-
     if (filters.dateRange !== "all") {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -366,9 +357,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
     switch (sortBy) {
       case "popular":
         filtered.sort((a, b) => (b.attendees || b.students || 0) - (a.attendees || a.students || 0));
-        break;
-      case "rated":
-        filtered.sort((a, b) => b.rating - a.rating);
         break;
       case "recent":
         filtered.sort((a, b) => {
@@ -467,7 +455,8 @@ export default function Home({ initialData }: { initialData: any[] }) {
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onFocus={handleSearchFocus}
                 onBlur={handleSearchBlur}
-                className="w-full pl-12 pr-4 py-8 text-lg border-0 rounded-2xl shadow-lg focus:ring-4 focus:ring-primary/20 focus:outline-none transition-all duration-200"
+                className="w-full pr-4 py-8 text-lg border-0 rounded-2xl shadow-lg focus:ring-4 focus:ring-primary/20 focus:outline-none transition-all duration-200"
+                style={{ paddingLeft: "2rem" }}
               />
             </div>
 
@@ -503,8 +492,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
                           </div>
                           <div className="text-right">
                             <div className="flex items-center gap-1 text-yellow-500">
-                              <Star size={14} fill="currentColor" />
-                              <span className="text-sm font-medium">{result.rating}</span>
                             </div>
                           </div>
                         </div>
@@ -533,9 +520,9 @@ export default function Home({ initialData }: { initialData: any[] }) {
                 <Button variant="outline" className="flex items-center gap-2">
                   <Filter size={16} />
                   Filters
-                  {(filters.priceRange !== "all" || filters.skillLevel !== "all" || filters.location !== "all" || filters.dateRange !== "all" || filters.rating > 0) && (
+                  {(filters.priceRange !== "all" || filters.skillLevel !== "all" || filters.location !== "all" || filters.dateRange !== "all") && (
                     <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                      {[filters.priceRange, filters.skillLevel, filters.location, filters.dateRange, filters.rating > 0 ? "rating" : null].filter(Boolean).length}
+                      {[filters.priceRange, filters.skillLevel, filters.location, filters.dateRange].filter(Boolean).length}
                     </Badge>
                   )}
                 </Button>
@@ -591,22 +578,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
                     </Select>
                   </div>
 
-                  {/* Minimum Rating */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Minimum Rating</label>
-                    <Select value={filters.rating.toString()} onValueChange={(value) => setFilters(prev => ({ ...prev, rating: parseInt(value) }))}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">Any Rating</SelectItem>
-                        <SelectItem value="3">3+ Stars</SelectItem>
-                        <SelectItem value="4">4+ Stars</SelectItem>
-                        <SelectItem value="5">5 Stars Only</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   {/* Clear Filters */}
                   <Button
                     variant="outline"
@@ -616,7 +587,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
                       skillLevel: "all",
                       location: "all",
                       dateRange: "all",
-                      rating: 0
                     })}
                     className="w-full"
                   >
@@ -740,8 +710,6 @@ export default function Home({ initialData }: { initialData: any[] }) {
                         {result.title || result.name}
                       </h3>
                       <div className="flex items-center gap-1 text-yellow-500">
-                        <Star size={16} fill="currentColor" />
-                        <span className="text-sm font-medium">{result.rating}</span>
                       </div>
                     </div>
                     <p className="text-muted-foreground mb-2 flex items-center gap-1">

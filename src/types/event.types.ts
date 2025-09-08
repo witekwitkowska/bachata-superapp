@@ -28,7 +28,6 @@ export interface BaseEvent {
   createdAt: Date | string;
   updatedAt: Date | string;
   images?: string[]; // Added for image support
-  rating?: number; // Added for rating support
   teacher?: any; // Added for teacher reference
   startDate?: Date;
   endDate?: Date;

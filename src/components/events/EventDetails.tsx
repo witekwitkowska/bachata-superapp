@@ -10,7 +10,6 @@ import {
     Clock,
     MapPin,
     Users,
-    Star,
     Euro,
     Music,
     User,
@@ -18,7 +17,7 @@ import {
     Heart,
     Share2,
     ChevronLeft,
-    ExternalLink
+    ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { handlePost } from "@/lib/fetch";
@@ -464,14 +463,6 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                                         "Attend Event"
                                     )}
                                 </Button>
-
-                                {event.rating && (
-                                    <div className="flex items-center justify-center gap-1">
-                                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                        <span className="text-sm font-medium">{event.rating}</span>
-                                        <span className="text-sm text-muted-foreground">(4.8)</span>
-                                    </div>
-                                )}
                             </div>
                         </CardContent>
                     </Card>
