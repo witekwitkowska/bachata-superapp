@@ -57,7 +57,7 @@ export function AnimatedSidebar({ session, isMobile }: { session: Session | null
                 className={`${isMobile ? "fixed inset-y-0 left-0" : ""} z-40 w-72 shadow-2xl backdrop-blur-sm border-r border-gray-200/50 dark:border-gray-700/50 lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
                     } lg:translate-x-0`}
             >
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col h-full overflow-y-auto hide-scrollbar">
                     {/* Sidebar Header */}
                     <div className="p-6 border-b border-gray-200/50 dark:border-gray-700/50">
                         <div className="flex items-center space-x-3">

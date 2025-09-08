@@ -1,17 +1,22 @@
-"use client"
+"use client";
+import * as React from "react";
+import { ChevronDownIcon } from "lucide-react";
 
-import * as React from "react"
-import { ChevronDownIcon } from "lucide-react"
-
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface DateTimePickerProps {
     value?: Date | string;
@@ -30,6 +35,21 @@ export function DateTimePicker({
 }: DateTimePickerProps) {
     const [open, setOpen] = React.useState(false)
 
+    // Generate time options in 30-minute intervals
+    const generateTimeOptions = () => {
+        const options = [];
+        for (let hour = 0; hour < 24; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:00`;
+                const displayTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                options.push({ value: timeString, label: displayTime });
+            }
+        }
+        return options;
+    };
+
+    const timeOptions = generateTimeOptions();
+
     // Parse the value to get date and time
     const parseValue = React.useCallback((val: Date | string | undefined): { date: Date | undefined; time: string } => {
         if (!val) return { date: undefined, time: "00:00:00" };
@@ -37,7 +57,7 @@ export function DateTimePicker({
         if (val instanceof Date) {
             return {
                 date: val,
-                time: val.toTimeString().slice(0, 8)
+                time: val.toTimeString().slice(0, 8) // Already in HH:MM:SS format
             };
         }
 
@@ -49,7 +69,7 @@ export function DateTimePicker({
             }
             return {
                 date,
-                time: date.toTimeString().slice(0, 8)
+                time: date.toTimeString().slice(0, 8) // Already in HH:MM:SS format
             };
         } catch {
             return { date: undefined, time: "00:00:00" };
@@ -125,15 +145,19 @@ export function DateTimePicker({
                 <Label htmlFor="time-picker" className="px-1">
                     Time
                 </Label>
-                <Input
-                    type="time"
-                    id="time-picker"
-                    step="1"
-                    value={selectedTime}
-                    onChange={(e) => handleTimeChange(e.target.value)}
-                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                />
+                <Select value={selectedTime} onValueChange={handleTimeChange}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                        {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
         </div>
-    )
+    );
 }

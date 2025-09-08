@@ -186,10 +186,10 @@ export function EventForm({ eventType, initialData, onSubmit, onCancel, onFormSu
                 exclusionList={["type"]}
                 optionsMap={getOptionsMap()}
                 imagesList={["images"]}
-                dateOnlyList={["startDate", "endDate"]}
+                dateTimeList={["startDate", "endDate"]}
                 coordinatesList={["coordinates"]}
                 inputList={["videoLinks"]}
-                className="grid gap-4 overflow-x-scroll"
+                className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(300px,1fr))] overflow-x-scroll"
                 endpointType={initialData ? "PATCH" : "POST"}
                 onFormSuccess={onFormSuccess}
             />

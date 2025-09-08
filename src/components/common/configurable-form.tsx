@@ -370,9 +370,6 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
 
 
 
-
-
-
     return (
         <div className={containerClassName}>
             <Form {...form}>
@@ -449,7 +446,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                             <FormMessage />
                                         </FormItem>
                                     ) : imagesList?.includes(fieldKey) ? (
-                                        <FormItem className="col-span-2">
+                                        <FormItem className="col-span-1 md:col-span-2">
                                             <FormLabel>
                                                 {`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                             </FormLabel>
@@ -587,7 +584,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                             <FormMessage />
                                         </FormItem>
                                     ) : coordinatesList?.includes(fieldKey) ? (
-                                        <FormItem>
+                                        <FormItem className="col-span-1 md:col-span-2">
                                             <FormControl>
                                                 <CoordinatesInput
                                                     value={field.value as { lat: number; lng: number } | null}

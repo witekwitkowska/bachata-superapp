@@ -185,7 +185,7 @@ export function SimpleMap({
                 <span className="text-xs text-muted-foreground">
                     Click on the map to set location
                 </span>
-                <select
+                {/* <select
                     value={currentTileLayer}
                     onChange={(e) => setCurrentTileLayer(e.target.value as keyof typeof LEAFLET_CONFIG.tileLayers)}
                     className="text-xs border rounded px-2 py-1 bg-background"
@@ -195,7 +195,7 @@ export function SimpleMap({
                             {layer.name}
                         </option>
                     ))}
-                </select>
+                </select> */}
             </div>
             <div
                 ref={mapRef}

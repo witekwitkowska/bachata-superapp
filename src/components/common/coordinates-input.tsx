@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -125,8 +125,7 @@ export function CoordinatesInput({
         onChange(null);
     };
 
-    // Update address when coordinates change
-    React.useEffect(() => {
+    useEffect(() => {
         if (value && isValidCoordinate(value.lat, value.lng)) {
             fetchAddress(value.lat, value.lng);
         }
@@ -138,7 +137,7 @@ export function CoordinatesInput({
                 {label}{required && " *"}
             </Label>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-3">
                 <div className="space-y-1">
                     <Label htmlFor="lat" className="text-xs text-muted-foreground">
                         Latitude
@@ -194,11 +193,6 @@ export function CoordinatesInput({
                         {showMapView ? "Hide Map" : "Show Map"}
                     </Button>
                 )}
-
-                <div className="text-xs text-green-600 bg-green-50 p-2 rounded border">
-                    <strong>Free Maps:</strong> Using OpenStreetMap and other free tile providers. No API keys required!
-                </div>
-
                 {(lat || lng) && (
                     <Button
                         type="button"
