@@ -58,6 +58,11 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
         x: profile.avatarX || 50,
         y: profile.avatarY || 50
     });
+    const [isEditingBanner, setIsEditingBanner] = useState(false);
+    const [bannerPosition, setBannerPosition] = useState({
+        x: profile.bannerX || 50,
+        y: profile.bannerY || 50
+    });
 
     const getUserType = () => {
         if (profile.role === "admin") return { type: "admin", label: "Admin", color: "bg-purple-100 text-purple-800", icon: Star };
@@ -116,6 +121,31 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
         });
     };
 
+    const handleSaveBannerPosition = async (x: number, y: number) => {
+        try {
+            const { success, error } = await handlePatch(`/api/users/${profile.id}`, { bannerX: x, bannerY: y }, 'failed to update banner position');
+
+            if (success) {
+                setBannerPosition({ x, y });
+                setIsEditingBanner(false);
+            } else {
+                throw new Error(error || "Failed to update banner position");
+            }
+        } catch (error) {
+            console.error("Error saving banner position:", error);
+            throw error;
+        }
+    };
+
+    const handleCancelBannerEdit = () => {
+        setIsEditingBanner(false);
+        // Reset to original position
+        setBannerPosition({
+            x: profile.bannerX || 50,
+            y: profile.bannerY || 50
+        });
+    };
+
 
     return (
         <div className="lg:w-1/2 w-full mx-auto min-h-screen bg-transparent">
@@ -125,6 +155,17 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                     <Link href="/" className="absolute z-1 top-4 left-4 hover:opacity-80 transition-opacity">
                         <ChevronLeft className="h-4 w-4 text-white" />
                     </Link>
+                    {isOwnProfile && bannerImage && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="absolute z-10 top-4 right-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
+                            onClick={() => setIsEditingBanner(true)}
+                        >
+                            <Edit3 className="h-4 w-4 mr-2" />
+                            Edit Position
+                        </Button>
+                    )}
                 </div>
                 {bannerImage ? (
                     <FullscreenImageModal
@@ -136,6 +177,9 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                                     src={bannerImage}
                                     alt="Profile banner"
                                     className="w-full h-full object-cover"
+                                    style={{
+                                        objectPosition: `${bannerPosition.x}% ${bannerPosition.y}%`
+                                    }}
                                 />
                                 <div className="absolute inset-0 bg-black/20" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -340,6 +384,18 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
                     onSave={handleSaveAvatarPosition}
                     onCancel={handleCancelAvatarEdit}
                     isOpen={isEditingAvatar}
+                />
+            )}
+
+            {/* Banner Position Editor Modal */}
+            {bannerImage && (
+                <ImagePositionEditor
+                    imageUrl={bannerImage}
+                    initialX={bannerPosition.x}
+                    initialY={bannerPosition.y}
+                    onSave={handleSaveBannerPosition}
+                    onCancel={handleCancelBannerEdit}
+                    isOpen={isEditingBanner}
                 />
             )}
         </div>

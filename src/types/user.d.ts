@@ -12,6 +12,8 @@ export interface UserProfile {
   videoLinks?: string[];
   avatarX?: number; // X position for avatar object-position (0-100)
   avatarY?: number; // Y position for avatar object-position (0-100)
+  bannerX?: number; // X position for banner object-position (0-100)
+  bannerY?: number; // Y position for banner object-position (0-100)
   isPublic?: boolean;
   role?: string;
   isTeacher?: boolean;

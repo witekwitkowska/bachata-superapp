@@ -3,10 +3,12 @@ import { createCrudRoute } from "@/lib/api/crud-generator";
 import { userUpdateSchema } from "@/lib/zod";
 import { ObjectId } from "mongodb";
 
-// Extended user update schema to include avatar position and status
+// Extended user update schema to include avatar position, banner position and status
 const extendedUserUpdateSchema = userUpdateSchema.extend({
   avatarX: z.number().min(0).max(100).optional(),
   avatarY: z.number().min(0).max(100).optional(),
+  bannerX: z.number().min(0).max(100).optional(),
+  bannerY: z.number().min(0).max(100).optional(),
   status: z.enum(["active", "inactive", "suspended"]).optional(),
 });
 
