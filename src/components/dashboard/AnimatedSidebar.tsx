@@ -19,7 +19,7 @@ const navigation = [
     { id: "admin-socials", label: "Manage Socials", icon: Calendar, href: "/dashboard/admin/socials", adminOnly: true, organizerOnly: true },
     { id: "admin-festivals", label: "Manage Festivals", icon: Calendar, href: "/dashboard/admin/festivals", adminOnly: true },
     { id: "admin-sessions", label: "Private Sessions", icon: Users, href: "/dashboard/admin/private-sessions", adminOnly: true, organizerOnly: true },
-    { id: "admin-workshops", label: "Manage Workshops", icon: GraduationCap, href: "/dashboard/admin/workshops", adminOnly: true, organizerOnly: true },
+    { id: "admin-workshops", label: "Manage Workshops", icon: GraduationCap, href: "/dashboard/admin/workshops", adminOnly: true, organizerOnly: true, teacherOnly: true },
     { id: "admin-locations", label: "Manage Locations", icon: MapPin, href: "/dashboard/admin/locations", adminOnly: true },
     { id: "admin-events", label: "All Events", icon: Calendar, href: "/dashboard/admin/events", adminOnly: true },
     { id: "admin-tags", label: "Manage Tags", icon: Tag, href: "/dashboard/admin/tags", adminOnly: true },

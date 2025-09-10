@@ -267,12 +267,13 @@ export function UserTable({ users, onUserUpdate }: UserTableProps) {
             selectors={[
                 {
                     name: "role",
-                    values: ["all", "visitor", "organizer", "admin"],
+                    values: ["all", "visitor", "organizer", "admin", 'teacher'],
                     displayLabels: {
                         all: "All Roles",
                         visitor: "Visitor",
                         organizer: "Organizer",
-                        admin: "Admin"
+                        admin: "Admin",
+                        teacher: "Teacher"
                     }
                 },
                 {

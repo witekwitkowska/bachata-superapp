@@ -209,7 +209,10 @@ export const userUpdateSchema = z.object({
   id: z.string().default(""),
   name: nameValidation,
   email: emailValidation,
-  role: z.enum(["visitor", "user", "team", "admin"]).default("user").optional(),
+  role: z
+    .enum(["visitor", "user", "team", "admin", "teacher", "organizer"])
+    .default("user")
+    .optional(),
   status: z
     .enum(["active", "inactive", "pending"])
     .default("active")
