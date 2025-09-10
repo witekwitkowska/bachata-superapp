@@ -10,7 +10,7 @@ const config = {
   entity: "events",
   schema: eventSchema,
   auth: true,
-  roles: ["admin", "visitor", "organizer"],
+  roles: ["admin", "visitor", "organizer", "teacher"],
   projection: {} as Record<string, 0 | 1>, // This will enable the transform function
   customFilters: async (session: any, params?: URLSearchParams) => {
     const filters: any = {};

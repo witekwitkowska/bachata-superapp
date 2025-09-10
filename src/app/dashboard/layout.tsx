@@ -13,6 +13,8 @@ export default async function DashboardLayout({
     const userAgent = receivedHeaders.get("user-agent") || "";
     const mobileCheck = isMobile(userAgent);
     const session = await auth();
+
+
     return (
         <div className="w-full flex min-h-screen">
             <AnimatedSidebar session={session} isMobile={mobileCheck} />

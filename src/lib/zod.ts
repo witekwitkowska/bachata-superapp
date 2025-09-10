@@ -6,6 +6,15 @@ import {
   VALIDATION_MESSAGES,
 } from "./validation-constants";
 
+export const ALL_ROLES = [
+  "visitor",
+  "user",
+  "team",
+  "admin",
+  "teacher",
+  "organizer",
+];
+
 // Common validation schemas for reuse across forms
 export const nameValidation = string()
   .min(1, VALIDATION_MESSAGES.NAME_REQUIRED)
@@ -193,7 +202,7 @@ export const signInSchema = z.object({
 export const signUpSchema = z
   .object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
+    email: z.email("Invalid email address"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
     recaptchaToken: z
@@ -209,10 +218,7 @@ export const userUpdateSchema = z.object({
   id: z.string().default(""),
   name: nameValidation,
   email: emailValidation,
-  role: z
-    .enum(["visitor", "user", "team", "admin", "teacher", "organizer"])
-    .default("user")
-    .optional(),
+  role: z.enum(ALL_ROLES).default("user").optional(),
   status: z
     .enum(["active", "inactive", "pending"])
     .default("active")
