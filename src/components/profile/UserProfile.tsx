@@ -23,8 +23,8 @@ import {
 import { PostCard } from "@/components/posts/PostCard";
 import { PostGrid } from "@/components/profile/PostGrid";
 import { ImagePositionEditor } from "@/components/profile/ImagePositionEditor";
+import { BannerCarousel } from "@/components/profile/BannerCarousel";
 import { VideoCarousel } from "@/components/events/VideoCarousel";
-import { FullscreenImageModal } from "@/components/common/FullscreenImageModal";
 import { convertToVideoLinks } from "@/lib/video-utils";
 import type { UserProfile as UserProfileType } from "@/types/user";
 import type { Post } from "@/types/post.types";
@@ -59,14 +59,23 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
         y: profile.avatarY || 50
     });
     const [isEditingBanner, setIsEditingBanner] = useState(false);
-    const [bannerPosition, setBannerPosition] = useState({
-        x: profile.bannerX || 50,
-        y: profile.bannerY || 50
+    const [editingBannerIndex, setEditingBannerIndex] = useState(0);
+    const [bannerPositions, setBannerPositions] = useState<Array<{ x: number; y: number }>>(() => {
+        // Initialize banner positions from profile data
+        if (profile.bannerPositions && profile.bannerPositions.length > 0) {
+            return profile.bannerPositions;
+        }
+        // Fallback to legacy single banner position or default
+        if (profile.bannerX !== undefined && profile.bannerY !== undefined) {
+            return [{ x: profile.bannerX, y: profile.bannerY }];
+        }
+        // Default positions for each banner
+        return profile.banners?.map(() => ({ x: 50, y: 50 })) || [];
     });
 
     const getUserType = () => {
         if (profile.role === "admin") return { type: "admin", label: "Admin", color: "bg-purple-100 text-purple-800", icon: Star };
-        if (profile.isTeacher || profile.role === "teacher") return { type: "artist", label: "Artist", color: "bg-pink-100 text-pink-800", icon: Music };
+        if (profile.isTeacher || profile.role === "teacher") return { type: "teacher", label: "Teacher", color: "bg-pink-100 text-pink-800", icon: Music };
         if (profile.role === "organizer") return { type: "organizer", label: "Organizer", color: "bg-blue-100 text-blue-800", icon: Users };
         return { type: "dancer", label: "Dancer", color: "bg-green-100 text-green-800", icon: Heart };
     };
@@ -74,7 +83,7 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
     const userType = getUserType();
     const isOwnProfile = currentUserId === profile.id;
     const profileImage = profile.avatars?.[0] || profile.gallery?.[0];
-    const bannerImage = profile.banners?.[0];
+    const banners = profile.banners || [];
 
 
 
@@ -121,12 +130,26 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
         });
     };
 
+    const handleEditBannerPosition = (bannerIndex: number) => {
+        setEditingBannerIndex(bannerIndex);
+        setIsEditingBanner(true);
+    };
+
     const handleSaveBannerPosition = async (x: number, y: number) => {
         try {
-            const { success, error } = await handlePatch(`/api/users/${profile.id}`, { bannerX: x, bannerY: y }, 'failed to update banner position');
+            // Create updated banner positions array
+            const updatedBannerPositions = [...bannerPositions];
+            updatedBannerPositions[editingBannerIndex] = { x, y };
+
+            const { success, error } = await handlePatch(
+                `/api/users/${profile.id}`,
+                { bannerPositions: updatedBannerPositions },
+                'failed to update banner position'
+            );
 
             if (success) {
-                setBannerPosition({ x, y });
+                setBannerPositions(updatedBannerPositions);
+                console.log('updatedBannerPositions', updatedBannerPositions);
                 setIsEditingBanner(false);
             } else {
                 throw new Error(error || "Failed to update banner position");
@@ -139,59 +162,28 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
 
     const handleCancelBannerEdit = () => {
         setIsEditingBanner(false);
-        // Reset to original position
-        setBannerPosition({
-            x: profile.bannerX || 50,
-            y: profile.bannerY || 50
-        });
+        // Reset to original position for the specific banner
+        const originalPosition = bannerPositions[editingBannerIndex] || { x: 50, y: 50 };
+        // No need to reset state since we're not updating it until save
     };
 
 
     return (
         <div className="lg:w-1/2 w-full mx-auto min-h-screen bg-transparent">
-            {/* Banner */}
-            <div className="relative h-64 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 overflow-hidden rounded-lg group">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent">
-                    <Link href="/" className="absolute z-1 top-4 left-4 hover:opacity-80 transition-opacity">
-                        <ChevronLeft className="h-4 w-4 text-white" />
-                    </Link>
-                    {isOwnProfile && bannerImage && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="absolute z-10 top-4 right-4 bg-white/20 hover:bg-white/30 text-white border-white/30"
-                            onClick={() => setIsEditingBanner(true)}
-                        >
-                            <Edit3 className="h-4 w-4 mr-2" />
-                            Edit Position
-                        </Button>
-                    )}
-                </div>
-                {bannerImage ? (
-                    <FullscreenImageModal
-                        src={bannerImage}
-                        alt="Profile banner"
-                        trigger={
-                            <div className="relative w-full h-full cursor-pointer">
-                                <img
-                                    src={bannerImage}
-                                    alt="Profile banner"
-                                    className="w-full h-full object-cover"
-                                    style={{
-                                        objectPosition: `${bannerPosition.x}% ${bannerPosition.y}%`
-                                    }}
-                                />
-                                <div className="absolute inset-0 bg-black/20" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-                            </div>
-                        }
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600" />
-                )}
+            {/* Banner Carousel */}
+            <div className="relative">
+                <Link href="/" className="absolute z-20 top-4 left-4 hover:opacity-80 transition-opacity">
+                    <ChevronLeft className="h-4 w-4 text-white" />
+                </Link>
+                <BannerCarousel
+                    banners={banners}
+                    bannerPositions={bannerPositions}
+                    isOwnProfile={isOwnProfile}
+                    onEditPosition={handleEditBannerPosition}
+                />
             </div>
 
-            <div className="container mx-auto px-4 -mt-16 relative z-5">
+            <div className="container mx-auto px-4 relative z-5">
                 {/* Profile Header */}
                 <Card className="mb-6 shadow-lg border-0 bg-background backdrop-blur-sm">
                     <CardContent className="p-6">
@@ -388,14 +380,16 @@ export function UserProfile({ profile, posts, currentUserId, defaultTab = "posts
             )}
 
             {/* Banner Position Editor Modal */}
-            {bannerImage && (
+            {banners.length > 0 && isEditingBanner && (
                 <ImagePositionEditor
-                    imageUrl={bannerImage}
-                    initialX={bannerPosition.x}
-                    initialY={bannerPosition.y}
+                    imageUrl={banners[editingBannerIndex]}
+                    initialX={bannerPositions[editingBannerIndex]?.x || 50}
+                    initialY={bannerPositions[editingBannerIndex]?.y || 50}
                     onSave={handleSaveBannerPosition}
                     onCancel={handleCancelBannerEdit}
                     isOpen={isEditingBanner}
+                    title={`Adjust Banner ${editingBannerIndex + 1} Position`}
+                    imageType="banner"
                 />
             )}
         </div>

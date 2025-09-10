@@ -12,7 +12,7 @@ interface SmartImageProps {
     sizes?: string;
     focus?: "face" | "auto" | "center";
     quality?: number;
-    format?: "auto" | "webp" | "jpg" | "png";
+    format?: "auto" | "webp" | "jpg" | "png" | "avif";
     fallback?: string;
 }
 
@@ -118,7 +118,7 @@ export function generateCloudinaryUrl(
         height?: number;
         focus?: "face" | "auto" | "center";
         quality?: number;
-        format?: "auto" | "webp" | "jpg" | "png";
+        format?: "auto" | "webp" | "jpg" | "png" | "avif";
     } = {}
 ) {
     const {

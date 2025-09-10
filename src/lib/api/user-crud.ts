@@ -9,6 +9,14 @@ const extendedUserUpdateSchema = userUpdateSchema.extend({
   avatarY: z.number().min(0).max(100).optional(),
   bannerX: z.number().min(0).max(100).optional(),
   bannerY: z.number().min(0).max(100).optional(),
+  bannerPositions: z
+    .array(
+      z.object({
+        x: z.number().min(0).max(100),
+        y: z.number().min(0).max(100),
+      })
+    )
+    .optional(),
   status: z.enum(["active", "inactive", "suspended"]).optional(),
 });
 

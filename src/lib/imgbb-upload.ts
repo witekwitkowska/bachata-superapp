@@ -209,7 +209,7 @@ export const compressImage = (
                 reject(new Error("Canvas.toBlob returned null"));
               }
             },
-            "image/jpeg",
+            file.type === "image/avif" ? "image/avif" : "image/jpeg",
             quality
           );
           return;
@@ -245,7 +245,7 @@ export const compressImage = (
               reject(new Error("Canvas.toBlob returned null"));
             }
           },
-          "image/jpeg",
+          file.type === "image/avif" ? "image/avif" : "image/jpeg",
           quality
         );
       };
@@ -302,9 +302,10 @@ export const uploadImageWithCompression = async (
       }
     }
 
-    // Create file from compressed blob
+    // Create file from compressed blob, preserve original format if it's AVIF
+    const outputType = file.type === "image/avif" ? "image/avif" : "image/jpeg";
     processedFile = new File([finalBlob], file.name, {
-      type: "image/jpeg",
+      type: outputType,
     });
   } else {
     processedFile = file;

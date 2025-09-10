@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
             {
               folder: cloudinaryFolder,
               resource_type: "image",
-              allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+              allowed_formats: ["jpg", "jpeg", "png", "gif", "webp", "avif"],
             },
             (error, result) => {
               if (error) {
@@ -95,7 +95,14 @@ export async function POST(request: NextRequest) {
                 {
                   folder: cloudinaryFolder,
                   resource_type: "image",
-                  allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+                  allowed_formats: [
+                    "jpg",
+                    "jpeg",
+                    "png",
+                    "gif",
+                    "webp",
+                    "avif",
+                  ],
                 },
                 (error, result) => {
                   if (error) {
@@ -153,7 +160,14 @@ export async function POST(request: NextRequest) {
                     {
                       folder: cloudinaryFolder,
                       resource_type: "image",
-                      allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+                      allowed_formats: [
+                        "jpg",
+                        "jpeg",
+                        "png",
+                        "gif",
+                        "webp",
+                        "avif",
+                      ],
                     },
                     (error, result) => {
                       if (error) {

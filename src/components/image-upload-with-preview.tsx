@@ -85,10 +85,11 @@ export function ImageUploadWithPreview({
 
         const fileArray = Array.from(files);
         const validFiles = fileArray.filter(file => {
-            if (!file.type.startsWith('image/')) {
+            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
+            if (!file.type.startsWith('image/') || !allowedTypes.includes(file.type)) {
                 toast({
                     title: "Invalid File",
-                    description: `${file.name} is not an image file. Please select only image files.`,
+                    description: `${file.name} is not a supported image format. Please select JPG, PNG, GIF, WebP, or AVIF files.`,
                     variant: "destructive",
                 });
                 return false;
@@ -312,7 +313,7 @@ export function ImageUploadWithPreview({
                 <label className="relative cursor-pointer">
                     <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/avif"
                         multiple={multiple}
                         onChange={(e) => {
                             const files = e.target.files;

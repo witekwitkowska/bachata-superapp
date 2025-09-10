@@ -13,6 +13,8 @@ interface ImagePositionEditorProps {
     onSave: (x: number, y: number) => Promise<void>;
     onCancel: () => void;
     isOpen: boolean;
+    title?: string;
+    imageType?: "avatar" | "banner";
 }
 
 export function ImagePositionEditor({
@@ -21,7 +23,9 @@ export function ImagePositionEditor({
     initialY = 50,
     onSave,
     onCancel,
-    isOpen
+    isOpen,
+    title,
+    imageType = "avatar"
 }: ImagePositionEditorProps) {
     const [position, setPosition] = useState({ x: initialX, y: initialY });
     const [isDragging, setIsDragging] = useState(false);
@@ -73,9 +77,11 @@ export function ImagePositionEditor({
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-        // Clamp values between 0 and 100
+        // For banners, allow Y to go beyond 100% to access more image content
+        const maxY = imageType === "banner" ? 150 : 100;
+        const minY = imageType === "banner" ? -50 : 0; // Allow going above container too
         const clampedX = Math.max(0, Math.min(100, x));
-        const clampedY = Math.max(0, Math.min(100, y));
+        const clampedY = Math.max(minY, Math.min(maxY, y));
 
         setPosition({ x: clampedX, y: clampedY });
     };
@@ -90,9 +96,11 @@ export function ImagePositionEditor({
         const x = ((touch.clientX - rect.left) / rect.width) * 100;
         const y = ((touch.clientY - rect.top) / rect.height) * 100;
 
-        // Clamp values between 0 and 100
+        // For banners, allow Y to go beyond 100% to access more image content
+        const maxY = imageType === "banner" ? 150 : 100;
+        const minY = imageType === "banner" ? -50 : 0; // Allow going above container too
         const clampedX = Math.max(0, Math.min(100, x));
-        const clampedY = Math.max(0, Math.min(100, y));
+        const clampedY = Math.max(minY, Math.min(maxY, y));
 
         setPosition({ x: clampedX, y: clampedY });
     };
@@ -105,10 +113,10 @@ export function ImagePositionEditor({
         setIsSaving(true);
         try {
             await onSave(position.x, position.y);
-            toast.success("Avatar position updated successfully!");
+            toast.success(`${imageType === "banner" ? "Banner" : "Avatar"} position updated successfully!`);
         } catch (error) {
-            toast.error("Failed to update avatar position");
-            console.error("Error updating avatar position:", error);
+            toast.error(`Failed to update ${imageType} position`);
+            console.error(`Error updating ${imageType} position:`, error);
         } finally {
             setIsSaving(false);
         }
@@ -121,7 +129,7 @@ export function ImagePositionEditor({
             <Card className="w-full max-w-2xl">
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <CardTitle>Adjust Avatar Position</CardTitle>
+                        <CardTitle>{title || `Adjust ${imageType === "banner" ? "Banner" : "Avatar"} Position`}</CardTitle>
                         <Button variant="ghost" size="sm" onClick={onCancel}>
                             <X className="h-4 w-4" />
                         </Button>
@@ -135,7 +143,7 @@ export function ImagePositionEditor({
                     {/* Image Preview Container */}
                     <div
                         ref={containerRef}
-                        className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden cursor-crosshair select-none touch-none"
+                        className="relative w-full h-64 bg-gray-100 rounded-lg overflow-visible cursor-crosshair select-none touch-none"
                         style={{ touchAction: 'none' }}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
@@ -148,7 +156,7 @@ export function ImagePositionEditor({
                         <img
                             ref={imageRef}
                             src={imageUrl}
-                            alt="Avatar preview"
+                            alt={`${imageType} preview`}
                             className="w-full h-full object-cover"
                             style={{
                                 objectPosition: `${position.x}% ${position.y}%`
@@ -158,7 +166,7 @@ export function ImagePositionEditor({
 
                         {/* Position indicator */}
                         <div
-                            className="absolute w-4 h-4 border-2 border-white rounded-full shadow-lg pointer-events-none"
+                            className="absolute w-4 h-4 border-2 border-white rounded-full shadow-lg pointer-events-none z-10"
                             style={{
                                 left: `${position.x}%`,
                                 top: `${position.y}%`,
