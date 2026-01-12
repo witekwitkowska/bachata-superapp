@@ -23,4 +23,8 @@ export interface UserProfile {
   postsCount?: number;
   followersCount?: number;
   followingCount?: number;
+  // User's post reactions
+  lovedPosts?: string[]; // Posts user loved (lightning)
+  likedPosts?: string[]; // Posts user liked (fire)
+  savedPosts?: string[]; // Posts user saved (ice)
 }

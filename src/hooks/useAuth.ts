@@ -24,9 +24,17 @@ export function useAuth() {
       }
 
       if (result?.ok) {
+        // Wait a moment for session to update, then redirect
+        await new Promise((resolve) => setTimeout(resolve, 100));
         router.push("/dashboard");
         return { success: true };
       }
+
+      // If we get here, login failed without a specific error
+      return {
+        success: false,
+        error: "Login failed. Please check your credentials.",
+      };
     } catch (error) {
       return {
         success: false,
@@ -69,22 +77,25 @@ export function useAuth() {
   }) => {
     setIsLoading(true);
     try {
-      const { success, error } = await handlePost(
-        "/api/auth/register",
-        userData,
-        "Registration failed"
-      );
+      // handlePost throws on error, returns response on success
+      await handlePost("/api/auth/register", userData, "Registration failed");
 
-      if (!success) {
-        throw new Error(error || "Registration failed");
-      }
-
-      if (!success) {
-        throw new Error(error || "Registration failed");
-      }
-
+      // If we get here, registration was successful
       // Auto-login after successful registration
       const loginResult = await login(userData.email, userData.password);
+
+      if (!loginResult.success) {
+        // If auto-login fails, return error but don't redirect
+        // User can manually navigate to sign-in page
+        return {
+          success: false,
+          error:
+            loginResult.error ||
+            "Registration successful! Please sign in to continue.",
+        };
+      }
+
+      // Login successful, redirect happens in login function
       return loginResult;
     } catch (error) {
       return {

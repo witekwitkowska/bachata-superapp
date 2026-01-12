@@ -301,30 +301,34 @@ export const Header = ({ session }: { session: Session | null }) => {
                   onLeave={handleLeave}
                 />
               )}
-              <Line background="neutral-alpha-medium" vert maxHeight="24" />
-              {routes["/about"] && (
+              {session && (
                 <>
-                  <Row s={{ hide: true }}>
-                    <AnimatedToggleButton
-                      prefixIcon="person"
-                      href="/about"
-                      label={about.label}
-                      selected={pathname === "/about"}
-                      itemKey="about"
-                      onHover={handleHover}
-                      onLeave={handleLeave}
-                    />
-                  </Row>
-                  <Row hide s={{ hide: false }}>
-                    <AnimatedToggleButton
-                      prefixIcon="person"
-                      href="/about"
-                      selected={pathname === "/about"}
-                      itemKey="about"
-                      onHover={handleHover}
-                      onLeave={handleLeave}
-                    />
-                  </Row>
+                  <Line background="neutral-alpha-medium" vert maxHeight="24" />
+                  {routes["/my-profile"] && (
+                    <>
+                      <Row s={{ hide: true }}>
+                        <AnimatedToggleButton
+                          prefixIcon="person"
+                          href="/my-profile"
+                          label={about.label}
+                          selected={pathname === "/my-profile" || pathname.startsWith("/my-profile")}
+                          itemKey="my-profile"
+                          onHover={handleHover}
+                          onLeave={handleLeave}
+                        />
+                      </Row>
+                      <Row hide s={{ hide: false }}>
+                        <AnimatedToggleButton
+                          prefixIcon="person"
+                          href="/my-profile"
+                          selected={pathname === "/my-profile" || pathname.startsWith("/my-profile")}
+                          itemKey="my-profile"
+                          onHover={handleHover}
+                          onLeave={handleLeave}
+                        />
+                      </Row>
+                    </>
+                  )}
                 </>
               )}
               {/* {routes["/work"] && (

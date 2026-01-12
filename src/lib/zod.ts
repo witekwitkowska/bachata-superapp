@@ -224,6 +224,10 @@ export const userUpdateSchema = z.object({
     .default("active")
     .optional(),
   companyId: z.string().default("").optional(),
+  // User's post reactions
+  lovedPosts: z.array(z.string()).default([]).optional(), // Posts user loved (lightning)
+  likedPosts: z.array(z.string()).default([]).optional(), // Posts user liked (fire)
+  savedPosts: z.array(z.string()).default([]).optional(), // Posts user saved (ice)
 });
 
 export const userEditImagesSchema = z.object({
@@ -244,6 +248,31 @@ export const userEditSchema = z.object({
   avatarY: z.number().min(0).max(100).optional(),
   // avatar: z.string().optional(),
   //date of birth
+});
+
+// Teacher Schema - flattened for ConfigurableForm compatibility
+export const teacherSchema = z.object({
+  isTeacher: z.boolean().default(false).optional(),
+  teachingSince: z.string().default("").optional(),
+  specializations: z.array(z.string()).default([]).optional(),
+  certifications: z.array(z.string()).default([]).optional(),
+  experience: z.string().default("").optional(),
+  locations: z.array(z.string()).default([]).optional(),
+  // Flattened rates
+  ratePrivate: z.string().default("").optional(),
+  rateGroup: z.string().default("").optional(),
+  rateWorkshop: z.string().default("").optional(),
+  // Flattened availability
+  availabilityWeekdays: z.boolean().default(false).optional(),
+  availabilityWeekends: z.boolean().default(false).optional(),
+  availabilityEvenings: z.boolean().default(false).optional(),
+  availabilityMornings: z.boolean().default(false).optional(),
+  // Bio
+  teachingBio: z.string().default("").optional(),
+  // Flattened contact info
+  contactPhone: z.string().default("").optional(),
+  contactEmail: z.string().email().optional(),
+  contactWebsite: z.string().default("").optional(),
 });
 
 export const passwordChangeSchema = z

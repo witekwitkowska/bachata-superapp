@@ -14,8 +14,10 @@ import {
   Users,
   Calendar,
   Music,
-  Loader2
+  Loader2,
+  CalendarDays
 } from "lucide-react";
+import { CalendarView } from "@/components/common/CalendarView";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FaceFocusedImage } from "@/components/ui/face-focused-image";
@@ -85,26 +87,50 @@ const transformUserToSearchResult = (user: UserProfile) => ({
   createdAt: user.createdAt as string
 })
 
-const transformEventToSearchResult = (event: Event) => ({
-  id: (event.id) as string,
-  type: event.type as string,
-  title: event.title as string,
-  description: event.description as string,
-  location: (event.location as EventLocation)?.name || "Unknown Location",
-  city: (event.location as EventLocation)?.city || "",
-  country: (event.location as EventLocation)?.country || "",
-  date: event.time as unknown as string,
-  attendees: (event.maxAttendees as number) || 0,
-  teacherName: (event.teacher as any)?.name || "",
-  teacherImage: (event.teacher as any)?.image || (event.teacher as any)?.avatars?.[0] || "",
-  isPaid: event.isPaid as boolean,
-  price: event.price as number,
-  currency: event.currency as string,
-  skillLevel: (event as any).skillLevel as string || "", // Type assertion for workshop/private-session
-  focusAreas: (event as any).focusAreas as string[] || [], // Type assertion for workshop/private-session
-  createdAt: event.createdAt instanceof Date ? event.createdAt.toISOString() : event.createdAt as string,
-  image: event.images?.[0] || ""
-})
+const transformEventToSearchResult = (event: Event) => {
+  // Determine the date field to use based on event type
+  // Social and Festival events use startDate, others use time
+  let eventDate: Date | string | undefined;
+  
+  if (event.type === "social" || event.type === "festival") {
+    // Use startDate for social and festival events
+    eventDate = (event as any).startDate || event.time;
+  } else {
+    // Use time for workshop and private-session events
+    eventDate = event.time;
+  }
+  
+  // Convert date to ISO string if it's a Date object
+  const dateString = eventDate instanceof Date 
+    ? eventDate.toISOString() 
+    : eventDate 
+      ? (typeof eventDate === 'string' ? eventDate : new Date(eventDate).toISOString())
+      : undefined;
+
+  return {
+    id: (event.id) as string,
+    type: event.type as string,
+    title: event.title as string,
+    description: event.description as string,
+    location: (event.location as EventLocation)?.name || "Unknown Location",
+    city: (event.location as EventLocation)?.city || "",
+    country: (event.location as EventLocation)?.country || "",
+    date: dateString,
+    startDate: (event as any).startDate ? ((event as any).startDate instanceof Date ? (event as any).startDate.toISOString() : (event as any).startDate) : undefined,
+    endDate: (event as any).endDate ? ((event as any).endDate instanceof Date ? (event as any).endDate.toISOString() : (event as any).endDate) : undefined,
+    time: event.time ? (event.time instanceof Date ? event.time.toISOString() : event.time) : undefined,
+    attendees: (event.maxAttendees as number) || 0,
+    teacherName: (event.teacher as any)?.name || "",
+    teacherImage: (event.teacher as any)?.image || (event.teacher as any)?.avatars?.[0] || "",
+    isPaid: event.isPaid as boolean,
+    price: event.price as number,
+    currency: event.currency as string,
+    skillLevel: (event as any).skillLevel as string || "", // Type assertion for workshop/private-session
+    focusAreas: (event as any).focusAreas as string[] || [], // Type assertion for workshop/private-session
+    createdAt: event.createdAt instanceof Date ? event.createdAt.toISOString() : event.createdAt as string,
+    image: event.images?.[0] || ""
+  };
+}
 
 export default function Home({ initialData }: { initialData: any[] }) {
   const router = useRouter();
@@ -114,7 +140,7 @@ export default function Home({ initialData }: { initialData: any[] }) {
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "all");
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "popular");
-  const [viewMode, setViewMode] = useState<"grid" | "list">((searchParams.get("view") as "grid" | "list") || "grid");
+  const [viewMode, setViewMode] = useState<"grid" | "list" | "calendar">((searchParams.get("view") as "grid" | "list" | "calendar") || "grid");
   const [showFilters, setShowFilters] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [results, setResults] = useState<SearchResult[]>(initialData.map((item) => {
@@ -169,7 +195,7 @@ export default function Home({ initialData }: { initialData: any[] }) {
   };
 
   // Handle view mode change
-  const handleViewModeChange = (view: "grid" | "list") => {
+  const handleViewModeChange = (view: "grid" | "list" | "calendar") => {
     setViewMode(view);
     updateURL({ view });
   };
@@ -626,6 +652,7 @@ export default function Home({ initialData }: { initialData: any[] }) {
                 size="sm"
                 onClick={() => handleViewModeChange("grid")}
                 className="p-2 h-auto"
+                title="Grid View"
               >
                 <Grid3X3 size={18} />
               </Button>
@@ -635,8 +662,19 @@ export default function Home({ initialData }: { initialData: any[] }) {
                 size="sm"
                 onClick={() => handleViewModeChange("list")}
                 className="p-2 h-auto"
+                title="List View"
               >
                 <List size={18} />
+              </Button>
+              <Button
+                type="button"
+                variant={viewMode === "calendar" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => handleViewModeChange("calendar")}
+                className="p-2 h-auto"
+                title="Calendar View"
+              >
+                <CalendarDays size={18} />
               </Button>
             </div>
           </motion.div>
@@ -672,8 +710,20 @@ export default function Home({ initialData }: { initialData: any[] }) {
 
         {/* Results */}
         {!loading && !error && filteredResults.length > 0 && (
-          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-4"}>
-            {filteredResults.map((result, index) => (
+          <>
+            {viewMode === "calendar" ? (
+              <CalendarView
+                results={filteredResults}
+                onEventClick={(eventId) => {
+                  const event = filteredResults.find((r) => r.id === eventId);
+                  if (event && event.type !== "artist") {
+                    router.push(`/events/${eventId}`);
+                  }
+                }}
+              />
+            ) : (
+              <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" : "space-y-4"}>
+                {filteredResults.map((result, index) => (
               <motion.div
                 key={result.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -738,8 +788,10 @@ export default function Home({ initialData }: { initialData: any[] }) {
                   </CardContent>
                 </Card>
               </motion.div>
-            ))}
-          </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* No Results */}

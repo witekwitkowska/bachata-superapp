@@ -72,9 +72,9 @@ const home: Home = {
 };
 
 const about: About = {
-  path: "/about",
-  label: "About",
-  title: `About – ${person.name}`,
+  path: "/profile",
+  label: "Profile",
+  title: `Profile – ${person.name}`,
   description: `Meet ${person.name}, ${person.role} from ${person.location}`,
   tableOfContent: {
     display: true,

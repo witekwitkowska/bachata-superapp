@@ -17,7 +17,7 @@ const baseURL: string = "https://bachata-app.com";
 
 const routes: RoutesConfig = {
   "/": true,
-  "/about": true,
+  "/my-profile": true,
   "/work/[project]": true,
   "/blog": true,
   "/posts": true,

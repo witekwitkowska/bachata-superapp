@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Zap, Flame, Snowflake, MessageCircle, Share } from "lucide-react";
 import type { Post } from "@/types/post.types";
+import { useSession } from "next-auth/react";
 
 interface PostReactionsProps {
     post: Post;
@@ -11,6 +12,7 @@ interface PostReactionsProps {
 }
 
 export function PostReactions({ post, onReaction }: PostReactionsProps) {
+    const { data: session } = useSession();
     const [isReacting, setIsReacting] = useState(false);
 
     const handleReaction = async (reactionType: "lightning" | "fire" | "ice") => {
@@ -25,6 +27,11 @@ export function PostReactions({ post, onReaction }: PostReactionsProps) {
     };
 
     const hasReactions = post.lightnings.length > 0 || post.fires.length > 0 || post.ices.length > 0;
+    
+    // Check if current user has reacted
+    const userHasLightning = session?.user?.id && post.lightnings.some((r: any) => r.userId === session.user.id);
+    const userHasFire = session?.user?.id && post.fires.some((r: any) => r.userId === session.user.id);
+    const userHasIce = session?.user?.id && post.ices.some((r: any) => r.userId === session.user.id);
 
     return (
         <div className="space-y-3">
@@ -36,10 +43,14 @@ export function PostReactions({ post, onReaction }: PostReactionsProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleReaction("lightning")}
-                        disabled={isReacting}
-                        className="flex items-center space-x-1 text-yellow-500 hover:text-yellow-600"
+                        disabled={isReacting || !session?.user?.id}
+                        className={`flex items-center space-x-1 ${
+                            userHasLightning 
+                                ? "text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20" 
+                                : "text-yellow-500 hover:text-yellow-600"
+                        }`}
                     >
-                        <Zap className="h-4 w-4" />
+                        <Zap className={`h-4 w-4 ${userHasLightning ? "fill-current" : ""}`} />
                         <span className="text-xs">{post.lightnings.length}</span>
                     </Button>
 
@@ -48,10 +59,14 @@ export function PostReactions({ post, onReaction }: PostReactionsProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleReaction("fire")}
-                        disabled={isReacting}
-                        className="flex items-center space-x-1 text-orange-500 hover:text-orange-600"
+                        disabled={isReacting || !session?.user?.id}
+                        className={`flex items-center space-x-1 ${
+                            userHasFire 
+                                ? "text-orange-600 bg-orange-50 dark:bg-orange-900/20" 
+                                : "text-orange-500 hover:text-orange-600"
+                        }`}
                     >
-                        <Flame className="h-4 w-4" />
+                        <Flame className={`h-4 w-4 ${userHasFire ? "fill-current" : ""}`} />
                         <span className="text-xs">{post.fires.length}</span>
                     </Button>
 
@@ -60,10 +75,14 @@ export function PostReactions({ post, onReaction }: PostReactionsProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleReaction("ice")}
-                        disabled={isReacting}
-                        className="flex items-center space-x-1 text-blue-500 hover:text-blue-600"
+                        disabled={isReacting || !session?.user?.id}
+                        className={`flex items-center space-x-1 ${
+                            userHasIce 
+                                ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" 
+                                : "text-blue-500 hover:text-blue-600"
+                        }`}
                     >
-                        <Snowflake className="h-4 w-4" />
+                        <Snowflake className={`h-4 w-4 ${userHasIce ? "fill-current" : ""}`} />
                         <span className="text-xs">{post.ices.length}</span>
                     </Button>
                 </div>

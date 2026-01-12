@@ -6,7 +6,8 @@
     "export": "next export",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "turbo": "next dev --turbo"
   },
   "dependencies": {
     "@auth/core": "^0.40.0",

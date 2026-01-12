@@ -97,17 +97,21 @@ export function PostsFeed({
 
     const handleReaction = async (postId: string, reactionType: "lightning" | "fire" | "ice") => {
         try {
-            // For now, we'll just show a toast since we don't have user authentication
             if (session?.user?.id) {
-                const { success, error } = await handlePost(`/api/posts/${postId}/react`, {
+                const { success, error, data } = await handlePost(`/api/posts/${postId}/react`, {
                     reactionType,
-                    userId: session.user.id,
                 });
                 if (success) {
-                    toast.success(`You reacted with ${reactionType}!`);
+                    const reactionEmoji = reactionType === "lightning" ? "⚡" : reactionType === "fire" ? "🔥" : "❄️";
+                    const action = data?.hasReacted ? "added" : "removed";
+                    toast.success(`${reactionEmoji} Reaction ${action}!`);
+                    // Refresh posts to show updated reaction counts
+                    await fetchPosts(currentPage, false);
                 } else {
                     toast.error(error || "Failed to add reaction");
                 }
+            } else {
+                toast.error("Please sign in to react to posts");
             }
         } catch (error) {
             toast.error("Failed to add reaction");

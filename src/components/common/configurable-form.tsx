@@ -19,6 +19,7 @@ import { DatePicker } from "./date-picker";
 import { ImageUploadWithPreview } from "../image-upload-with-preview";
 import { CoordinatesInput } from "./coordinates-input";
 import { VideoLinksInput } from "./video-links-input";
+import { Textarea } from "@/components/ui/textarea";
 
 type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     formSchema: T;
@@ -46,6 +47,7 @@ type ConfigurableFormProps<T extends z.ZodObject<any>> = {
     imagesList?: string[] // Fields that need image upload with preview
     coordinatesList?: string[] // Fields that need coordinates input (lat, lng)
     inputList?: string[] // Fields that need special input components (like videoLinks)
+    textareaList?: string[] // Fields that need textarea input
     containerClassName?: string;
     exclusionList?: string[];
     onError?: (error: unknown) => void;
@@ -85,6 +87,7 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
     imagesList,
     coordinatesList,
     inputList,
+    textareaList,
     containerClassName,
     exclusionList,
     onFormSuccess
@@ -596,6 +599,27 @@ export const ConfigurableForm = forwardRef(function ConfigurableForm<T extends z
                                                     }}
                                                     label={`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
                                                     required={requiredList.includes(fieldKey)}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    ) : textareaList?.includes(fieldKey) ? (
+                                        <FormItem>
+                                            <FormLabel>
+                                                {`${displayNames?.[fieldKey] || fieldKey}${requiredList.includes(fieldKey) ? ' *' : ''}`}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Textarea
+                                                    {...field}
+                                                    value={field.value as string || ""}
+                                                    onChange={(e) => {
+                                                        if (form.formState.errors[fieldKey as Path<FormData>]) {
+                                                            form.clearErrors(fieldKey as Path<FormData>);
+                                                        }
+                                                        field.onChange(e.target.value);
+                                                    }}
+                                                    placeholder={`Enter ${displayNames?.[fieldKey]?.toLowerCase() || fieldKey}...`}
+                                                    rows={4}
                                                 />
                                             </FormControl>
                                             <FormMessage />
