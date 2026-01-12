@@ -30,7 +30,7 @@ import { UserProfile } from "@/types/user";
 import { Event, Location as EventLocation } from "@/types/event.types";
 
 // Types for our data
-interface SearchResult {
+export interface SearchResult {
   id: string;
   type: string;
   title?: string;
@@ -41,6 +41,9 @@ interface SearchResult {
   city?: string;
   country?: string;
   date?: string;
+  startDate?: string;
+  endDate?: string;
+  time?: string;
   attendees?: number;
   students?: number;
   image: string;
