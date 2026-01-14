@@ -33,6 +33,7 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
+import { ClickableImage } from "@/components/common/ClickableImage";
 import {
     formatEventTime,
     generateGoogleMapsLink,
@@ -193,16 +194,22 @@ export function EventDetails({ event, session }: EventDetailsProps) {
                                 {event.images.map((image, index) => (
                                     <CarouselItem key={index}>
                                         <div className="relative w-full h-64 md:h-96 rounded-lg overflow-hidden">
-                                            <FaceFocusedImage
+                                            <ClickableImage
                                                 src={image}
                                                 alt={`${event.title} - Image ${index + 1}`}
-                                                width={800}
-                                                height={384}
                                                 className="w-full h-full"
-                                                objectPosition="center"
-                                                priority={index === 0}
-                                                fallback="/images/placeholder.jpg"
-                                            />
+                                            >
+                                                <FaceFocusedImage
+                                                    src={image}
+                                                    alt={`${event.title} - Image ${index + 1}`}
+                                                    width={800}
+                                                    height={384}
+                                                    className="w-full h-full"
+                                                    objectPosition="center"
+                                                    priority={index === 0}
+                                                    fallback="/images/placeholder.jpg"
+                                                />
+                                            </ClickableImage>
                                         </div>
                                     </CarouselItem>
                                 ))}

@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { FaceFocusedImage } from "@/components/ui/face-focused-image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { ClickableImage } from "@/components/common/ClickableImage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { handleFetch } from "@/lib/fetch";
@@ -744,19 +745,24 @@ export default function Home({ initialData }: { initialData: any[] }) {
                     }
                   }}
                 >
-                  <FaceFocusedImage
+                  <ClickableImage
                     src={result.image || "/images/placeholder.jpg"}
                     alt={result.title || result.name || "Event or Artist"}
-                    width={viewMode === "list" ? 96 : 400}
-                    height={viewMode === "list" ? 96 : 192}
-                    className={`${viewMode === "list"
-                      ? "w-24 h-24"
-                      : "w-full h-48"
-                      }`}
-                    objectPosition={result.type === "artist" ? "top" : "center"}
-                    priority={index < 4}
-                    fallback="/images/placeholder.jpg"
-                  />
+                  >
+                    <FaceFocusedImage
+                      src={result.image || "/images/placeholder.jpg"}
+                      alt={result.title || result.name || "Event or Artist"}
+                      width={viewMode === "list" ? 96 : 400}
+                      height={viewMode === "list" ? 96 : 192}
+                      className={`${viewMode === "list"
+                        ? "w-24 h-24"
+                        : "w-full h-48"
+                        }`}
+                      objectPosition={result.type === "artist" ? "top" : "center"}
+                      priority={index < 4}
+                      fallback="/images/placeholder.jpg"
+                    />
+                  </ClickableImage>
                   <CardContent className={`p-4 flex-1 ${viewMode === "list" ? "flex-1" : ""}`}>
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-foreground text-lg">

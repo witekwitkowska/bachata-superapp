@@ -12,7 +12,7 @@ import { handleFetch } from "@/lib/fetch";
 interface PostCreateFormProps {
     onPostCreated?: () => void;
     className?: string;
-    session: Session;
+    session: Session | null;
 }
 
 export function PostCreateForm({ onPostCreated, className, session }: PostCreateFormProps) {
@@ -20,7 +20,7 @@ export function PostCreateForm({ onPostCreated, className, session }: PostCreate
     const [isLoadingTags, setIsLoadingTags] = useState(true);
 
     const defaultValues: PostInput = {
-        authorId: session?.user?.id,
+        authorId: session?.user?.id || "",
         caption: "",
         images: [],
         lightnings: [],

@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { PostsFeed } from "@/components/posts";
 import { posts } from "@/resources";
-import { redirect } from "next/navigation";
 import { isMobile } from "@/lib/utils";
 import { headers } from "next/headers";
 
@@ -12,9 +11,6 @@ export const metadata = {
 
 export default async function PostsPage() {
     const session = await auth();
-    if (!session?.user?.id) {
-        redirect("/auth/signin");
-    }
 
     const receivedHeaders = await headers()
     const userAgent = receivedHeaders.get("user-agent") || "";

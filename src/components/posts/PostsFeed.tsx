@@ -16,7 +16,7 @@ import { DateGroupedMasonry } from "./DateGroupedMasonry";
 
 interface PostsFeedProps {
     className?: string;
-    session: Session;
+    session: Session | null;
     isMobile?: boolean;
     layoutType?: "chronological" | "grouped" | "standard";
     enablePagination?: boolean;
@@ -144,10 +144,12 @@ export function PostsFeed({
             <div className={`space-y-6 ${className}`}>
                 <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold">Posts</h2>
-                    <Button onClick={() => setShowCreateForm(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Post
-                    </Button>
+                    {session?.user?.id && (
+                        <Button onClick={() => setShowCreateForm(true)}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Post
+                        </Button>
+                    )}
                 </div>
 
                 <div className="space-y-4">
@@ -186,10 +188,12 @@ export function PostsFeed({
                         Refresh
                     </Button>
                 </div>
-                <Button onClick={() => setShowCreateForm(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Post
-                </Button>
+                {session?.user?.id && (
+                    <Button onClick={() => setShowCreateForm(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Post
+                    </Button>
+                )}
             </div>
 
             {showCreateForm && (
